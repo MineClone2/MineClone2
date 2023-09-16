@@ -269,7 +269,16 @@ for w=1, #woods do
 		id = wood[1].."_fence"
 		id_gate = wood[1].."_fence_gate"
 	end
-	mcl_fences.register_fence_and_fence_gate(id, wood[2], wood[3], wood[4], wood_groups, 2, 15, wood_connect, wood_sounds)
+	mcl_fences.register_fence_and_fence_gate(
+		id,
+		wood[2],
+		wood[3],
+		wood[4],
+		wood_groups,
+		minetest.registered_nodes["mcl_core:wood"]._mcl_hardness,
+		minetest.registered_nodes["mcl_core:wood"]._mcl_blast_resistance,
+		wood_connect,
+		wood_sounds)
 
 	minetest.register_craft({
 		output = "mcl_fences:"..id.." 3",
@@ -289,7 +298,15 @@ end
 
 
 -- Nether Brick Fence (without fence gate!)
-mcl_fences.register_fence("nether_brick_fence", S("Nether Brick Fence"), "mcl_fences_fence_nether_brick.png", {pickaxey=1, deco_block=1, fence_nether_brick=1}, 2, 30, {"group:fence_nether_brick"}, mcl_sounds.node_sound_stone_defaults())
+mcl_fences.register_fence(
+	"nether_brick_fence",
+	S("Nether Brick Fence"),
+	"mcl_fences_fence_nether_brick.png",
+	{pickaxey=1, deco_block=1, fence_nether_brick=1},
+	minetest.registered_nodes["mcl_nether:nether_brick"]._mcl_hardness,
+	minetest.registered_nodes["mcl_nether:nether_brick"]._mcl_blast_resistance,
+	{"group:fence_nether_brick"},
+	mcl_sounds.node_sound_stone_defaults())
 
 minetest.register_craft({
 	output = "mcl_fences:nether_brick_fence 6",
