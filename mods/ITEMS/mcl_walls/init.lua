@@ -98,7 +98,7 @@ local full_blocks = {
 * groups: Base group memberships (optional, default is {pickaxey=1})
 * sounds: Sound table (optional, default is stone)
 ]]
-function mcl_walls.register_wall(nodename, description, source, tiles, inventory_image, groups, sounds)
+function mcl_walls.register_wall(nodename, description, source, tiles, inventory_image, groups, hardness, blast_resistance, sounds)
 
 	local base_groups = groups
 	if not base_groups then
@@ -169,8 +169,8 @@ function mcl_walls.register_wall(nodename, description, source, tiles, inventory
 				fixed = take
 			},
 			sounds = sounds,
-			_mcl_blast_resistance = 6,
-			_mcl_hardness = 2,
+			_mcl_blast_resistance = blast_resistance,
+			_mcl_hardness = hardness,
 		})
 
 		-- Add entry alias for the Help
@@ -197,8 +197,8 @@ function mcl_walls.register_wall(nodename, description, source, tiles, inventory
 			fixed = {pillar, full_blocks[1]}
 		},
 		sounds = sounds,
-		_mcl_blast_resistance = 6,
-		_mcl_hardness = 2,
+		_mcl_blast_resistance = blast_resistance,
+		_mcl_hardness = hardness,
 	})
 	-- Add entry alias for the Help
 	if minetest.get_modpath("doc") then
@@ -223,8 +223,8 @@ function mcl_walls.register_wall(nodename, description, source, tiles, inventory
 			fixed = {pillar, full_blocks[2]}
 		},
 		sounds = sounds,
-		_mcl_blast_resistance = 6,
-		_mcl_hardness = 2,
+		_mcl_blast_resistance = blast_resistance,
+		_mcl_hardness = hardness,
 	})
 	-- Add entry alias for the Help
 	if minetest.get_modpath("doc") then
@@ -255,8 +255,8 @@ function mcl_walls.register_wall(nodename, description, source, tiles, inventory
 		collisionbox = {-0.2, 0, -0.2, 0.2, 1.4, 0.2},
 		on_construct = update_wall,
 		sounds = sounds,
-		_mcl_blast_resistance = 6,
-		_mcl_hardness = 2,
+		_mcl_blast_resistance = blast_resistance,
+		_mcl_hardness = hardness,
 	})
 	if source then
 		minetest.register_craft({

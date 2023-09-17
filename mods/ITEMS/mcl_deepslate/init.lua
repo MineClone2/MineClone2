@@ -218,7 +218,15 @@ local function register_deepslate_variant(item, desc, longdesc)
 	end
 	if item ~= "chiseled" then
 		mcl_stairs.register_stair_and_slab_simple("deepslate_"..item, "mcl_deepslate:deepslate_"..item, S(desc.." Stairs"), S(desc.." Slab"), S("Double "..desc.." Slab"))
-		mcl_walls.register_wall("mcl_deepslate:deepslate"..item.."wall", S(desc.." Wall"), "mcl_deepslate:deepslate_"..item)
+		mcl_walls.register_wall(
+			"mcl_deepslate:deepslate"..item.."wall",
+			S(desc.." Wall"),
+			"mcl_deepslate:deepslate_"..item,
+			nil,
+			nil,
+			nil,
+			minetest.registered_nodes["mcl_deepslate:deepslate"]._mcl_hardness,
+			minetest.registered_nodes["mcl_deepslate:deepslate"]._mcl_blast_resistance)
 	end
 end
 
