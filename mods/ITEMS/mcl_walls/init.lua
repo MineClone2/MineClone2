@@ -100,7 +100,7 @@ local full_blocks = {
 * hardness: Hardness of node (optional, default matches `source` node or fallback value 2)
 * blast_resistance: Blast resistance of node (optional, default matches `source` node or fallback value 6)
 ]]
-function mcl_walls.register_wall(nodename, description, source, tiles, inventory_image, groups, hardness, blast_resistance, sounds)
+function mcl_walls.register_wall(nodename, description, source, tiles, inventory_image, groups, sounds, hardness, blast_resistance)
 
 	local base_groups = groups
 	if not base_groups then
