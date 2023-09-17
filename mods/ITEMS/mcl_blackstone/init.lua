@@ -230,14 +230,11 @@ mcl_walls.register_wall(
 	"mcl_blackstone:wall",
 	S("Blackstone Wall"),
 	"mcl_blackstone:blackstone",
-	{
-		"mcl_blackstone_top.png",
-		"mcl_blackstone_top.png",
-		"mcl_blackstone_side.png"
-	},
-	"",
-	{ cracky=3, pickaxey=1, material_stone=1 }
-)
+	nil,
+	nil,
+	nil,
+	minetest.registered_nodes["mcl_blackstone:blackstone"]._mcl_hardness,
+	minetest.registered_nodes["mcl_blackstone:blackstone"]._mcl_blast_resistance)
 
 --lavacooling
 

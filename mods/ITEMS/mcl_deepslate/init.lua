@@ -221,7 +221,12 @@ local function register_deepslate_variant(item, desc, longdesc)
 		mcl_walls.register_wall(
 			"mcl_deepslate:deepslate"..item.."wall",
 			S(desc.." Wall"),
-			"mcl_deepslate:deepslate_"..item)
+			"mcl_deepslate:deepslate_"..item,
+			nil,
+			nil,
+			nil,
+			minetest.registered_nodes["mcl_deepslate:deepslate"]._mcl_hardness,
+			minetest.registered_nodes["mcl_deepslate:deepslate"]._mcl_blast_resistance)
 	end
 end
 
