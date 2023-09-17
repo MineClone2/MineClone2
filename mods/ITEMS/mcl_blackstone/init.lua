@@ -229,12 +229,8 @@ mcl_stairs.register_stair_and_slab("blackstone_brick_polished", "mcl_blackstone:
 mcl_walls.register_wall(
 	"mcl_blackstone:wall",
 	S("Blackstone Wall"),
-	"mcl_blackstone:blackstone",
-	nil,
-	nil,
-	nil,
-	minetest.registered_nodes["mcl_blackstone:blackstone"]._mcl_hardness,
-	minetest.registered_nodes["mcl_blackstone:blackstone"]._mcl_blast_resistance)
+	"mcl_blackstone:blackstone"
+)
 
 --lavacooling
 
