@@ -2,7 +2,7 @@
 
 This API allows you to add more walls (like the cobblestone wall) to MineClone 2.
 
-## `mcl_walls.register_wall(nodename, description, craft_material, tiles, invtex, groups, hardness, blast_resistance, sounds)`
+## `mcl_walls.register_wall(nodename, description, craft_material, tiles, invtex, groups, sounds, hardness, blast_resistance)`
 
 Adds a new wall type. This is optimized for stone-based walls, but other materials are theoretically possible, too.
 
@@ -24,9 +24,9 @@ If `craft_material` is not `nil` it also adds a crafting recipe of the following
 * `tiles`: Wall textures table, same syntax as for `minetest.register_node` (optional if `source` is set)
 * `inventory_image`: Inventory image (optional if `source` is set)
 * `groups`: Base group memberships (optional, default is `{pickaxey=1}`)
-* `hardness`: Hardness of node (optional, default is 2)
-* `blast_resistance`: Blast resistance of node (optional, default is 6 like most stone walls)
 * `sounds`: Sound table (optional, by default default uses stone sounds)
+* `hardness`: Hardness of node (optional, default matches `source` node or fallback value 2)
+* `blast_resistance`: Blast resistance of node (optional, default matches `source` node or fallback value 6)
 
 The following groups will automatically be added to the nodes (where applicable), you do not need to add them
 to the `groups` table:

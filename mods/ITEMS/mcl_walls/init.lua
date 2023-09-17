@@ -97,8 +97,10 @@ local full_blocks = {
 * inventory_image: Inventory image (optional)
 * groups: Base group memberships (optional, default is {pickaxey=1})
 * sounds: Sound table (optional, default is stone)
+* hardness: Hardness of node (optional, default matches `source` node or fallback value 2)
+* blast_resistance: Blast resistance of node (optional, default matches `source` node or fallback value 6)
 ]]
-function mcl_walls.register_wall(nodename, description, source, tiles, inventory_image, groups, hardness, blast_resistance, sounds)
+function mcl_walls.register_wall(nodename, description, source, tiles, inventory_image, groups, sounds, hardness, blast_resistance)
 
 	local base_groups = groups
 	if not base_groups then
@@ -112,15 +114,29 @@ function mcl_walls.register_wall(nodename, description, source, tiles, inventory
 	local main_node_groups = table.copy(base_groups)
 	main_node_groups.deco_block = 1
 
-	-- TODO: Stop hardcoding blast resistance
-
-	if not sounds then
-		sounds = mcl_sounds.node_sound_stone_defaults()
-	end
-
-	if (not tiles) and source then
-		if minetest.registered_nodes[source] then
-			tiles = minetest.registered_nodes[source].tiles
+	if source then
+		-- Default values from `source` node
+		if not hardness then
+			hardness = minetest.registered_nodes[source]._mcl_hardness
+		end
+		if not blast_resistance then
+			blast_resistance = minetest.registered_nodes[source]._mcl_blast_resistance
+		end
+		if not sounds then
+			sounds = minetest.registered_nodes[source].sounds
+		end
+		if not tiles then
+			if minetest.registered_nodes[source] then
+				tiles = minetest.registered_nodes[source].tiles
+			end
+		end
+	else
+		-- Fallback in case no `source` given
+		if not hardness then
+			hardness = 2
+		end
+		if not blast_resistance then
+			blast_resistance = 6
 		end
 	end
 
