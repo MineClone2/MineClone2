@@ -52,7 +52,7 @@ minetest.register_node("mcl_ocean:prismarine_brick", {
 	tiles = {"mcl_ocean_prismarine_bricks.png"},
 	groups = {pickaxey=1, building_block=1, material_stone=1},
 	sounds = mcl_sounds.node_sound_stone_defaults(),
-	_mcl_blast_resistance = 1.5,--ffffixme
+	_mcl_blast_resistance = 6,
 	_mcl_hardness = 1.5,
 })
 
@@ -64,7 +64,7 @@ minetest.register_node("mcl_ocean:prismarine_dark", {
 	tiles = {"mcl_ocean_prismarine_dark.png"},
 	groups = {pickaxey=1, building_block=1, material_stone=1},
 	sounds = mcl_sounds.node_sound_stone_defaults(),
-	_mcl_blast_resistance = 1.5,--fixmetoo
+	_mcl_blast_resistance = 6,
 	_mcl_hardness = 1.5,
 })
 
