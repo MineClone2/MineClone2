@@ -424,7 +424,7 @@ minetest.register_node("mcl_core:grass_path", {
 		footstep = {name="default_grass_footstep", gain=0.1},
 	}),
 	_mcl_blast_resistance = 0.65,
-	_mcl_hardness = 0.6,
+	_mcl_hardness = 0.65,
 })
 
 -- TODO: Add particles
@@ -497,8 +497,8 @@ minetest.register_node("mcl_core:podzol", {
 	sounds = mcl_sounds.node_sound_dirt_defaults(),
 	on_construct = mcl_core.on_snowable_construct,
 	_mcl_snowed = "mcl_core:podzol_snow",
-	_mcl_blast_resistance = 0.8,
-	_mcl_hardness = 0.8,
+	_mcl_blast_resistance = 0.5,
+	_mcl_hardness = 0.5,
 	_mcl_silk_touch_drop = true,
 })
 mcl_core.register_snowed_node("mcl_core:podzol_snow", "mcl_core:podzol", nil, nil, false, S("Podzol with Snow"))
@@ -600,8 +600,8 @@ minetest.register_node("mcl_core:sandstonesmooth", {
 	stack_max = 64,
 	groups = {pickaxey=1, sandstone=1, normal_sandstone=1, building_block=1, material_stone=1},
 	sounds = mcl_sounds.node_sound_stone_defaults(),
-	_mcl_blast_resistance = 6,
-	_mcl_hardness = 2,
+	_mcl_blast_resistance = 0.8,
+	_mcl_hardness = 0.8,
 })
 
 minetest.register_node("mcl_core:sandstonecarved", {
@@ -687,8 +687,8 @@ minetest.register_node("mcl_core:redsandstonesmooth2", {
 	stack_max = 64,
 	groups = {pickaxey=1, sandstone=1, red_sandstone=1, building_block=1, material_stone=1},
 	sounds = mcl_sounds.node_sound_stone_defaults(),
-	_mcl_blast_resistance = 0.8,
-	_mcl_hardness = 0.8,
+	_mcl_blast_resistance = 6,
+	_mcl_hardness = 2,
 })
 
 ---
@@ -1119,8 +1119,8 @@ minetest.register_node("mcl_core:snowblock", {
 	on_construct = mcl_core.on_snow_construct,
 	after_destruct = mcl_core.after_snow_destruct,
 	drop = "mcl_throwing:snowball 4",
-	_mcl_blast_resistance = 0.1,
-	_mcl_hardness = 0.1,
+	_mcl_blast_resistance = 0.2,
+	_mcl_hardness = 0.2,
 	_mcl_silk_touch_drop = true,
 })
 

@@ -194,7 +194,7 @@ minetest.register_node("mcl_sculk:sculk", {
 	is_ground_content = false,
 	on_destruct = sculk_on_destruct,
 	_mcl_blast_resistance = 0.2,
-	_mcl_hardness = 0.6,
+	_mcl_hardness = 0.2,
 	_mcl_silk_touch_drop = true,
 })
 

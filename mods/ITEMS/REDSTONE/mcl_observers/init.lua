@@ -113,8 +113,8 @@ mesecon.register_node("mcl_observers:observer", {
 		sounds = mcl_sounds.node_sound_stone_defaults(),
 		paramtype2 = "facedir",
 		on_rotate = false,
-		_mcl_blast_resistance = 3.5,
-		_mcl_hardness = 3.5,
+		_mcl_blast_resistance = 3,
+		_mcl_hardness = 3,
 	}, {
 		description = S("Observer"),
 		_tt_help = S("Emits redstone pulse when block in front changes"),
@@ -172,8 +172,8 @@ mesecon.register_node("mcl_observers:observer_down", {
 		sounds = mcl_sounds.node_sound_stone_defaults(),
 		groups = {pickaxey=1, material_stone=1, not_opaque=1, not_in_creative_inventory=1 },
 		on_rotate = false,
-		_mcl_blast_resistance = 3.5,
-		_mcl_hardness = 3.5,
+		_mcl_blast_resistance = 3,
+		_mcl_hardness = 3,
 		drop = "mcl_observers:observer_off",
 	}, {
 		tiles = {
@@ -224,8 +224,8 @@ mesecon.register_node("mcl_observers:observer_up", {
 		sounds = mcl_sounds.node_sound_stone_defaults(),
 		groups = {pickaxey=1, material_stone=1, not_opaque=1, not_in_creative_inventory=1 },
 		on_rotate = false,
-		_mcl_blast_resistance = 3.5,
-		_mcl_hardness = 3.5,
+		_mcl_blast_resistance = 3,
+		_mcl_hardness = 3,
 		drop = "mcl_observers:observer_off",
 	}, {
 		tiles = {
