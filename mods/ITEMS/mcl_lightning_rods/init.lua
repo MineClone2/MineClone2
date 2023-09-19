@@ -60,7 +60,8 @@ local rod_def = {
 		return minetest.item_place(itemstack, placer, pointed_thing, param2)
 	end,
 
-	_mcl_blast_resistance = 0,
+	_mcl_blast_resistance = 6,
+	_mcl_hardness = 3,
 }
 
 minetest.register_node("mcl_lightning_rods:rod", rod_def)
