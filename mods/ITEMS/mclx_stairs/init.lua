@@ -22,13 +22,13 @@ for b=1, #barks do
 			{handy=1,axey=1, flammable=3, bark_stairs=1, material_wood=1, fire_encouragement=5, fire_flammability=5},
 			{minetest.registered_nodes[id].tiles[3]},
 			bark[2],
-			mcl_sounds.node_sound_wood_defaults(), 3, 2,
+			mcl_sounds.node_sound_wood_defaults(), nil, nil,
 			"woodlike")
 	mcl_stairs.register_slab(sub, id,
 			{handy=1,axey=1, flammable=3, bark_slab=1, material_wood=1, fire_encouragement=5, fire_flammability=5},
 			{minetest.registered_nodes[id].tiles[3]},
 			bark[3],
-			mcl_sounds.node_sound_wood_defaults(), 3, 2,
+			mcl_sounds.node_sound_wood_defaults(), nil, nil,
 			bark[4])
 end
 
@@ -42,7 +42,7 @@ mcl_stairs.register_stair("lapisblock", "mcl_core:lapisblock",
 		{pickaxey=3},
 		{"mcl_stairs_lapis_block_slab.png", "mcl_core_lapis_block.png", "mcl_core_lapis_block.png", "mcl_core_lapis_block.png", "mcl_core_lapis_block.png", "mcl_stairs_lapis_block_slab.png"},
 		S("Lapis Lazuli Stairs"),
-		nil, 6, nil,
+		nil, nil, nil,
 		"woodlike")
 
 mcl_stairs.register_slab("goldblock", "mcl_core:goldblock",
@@ -55,7 +55,7 @@ mcl_stairs.register_stair("goldblock", "mcl_core:goldblock",
 		{pickaxey=4},
 		{"mcl_stairs_gold_block_slab.png", "default_gold_block.png", "default_gold_block.png", "default_gold_block.png", "default_gold_block.png", "mcl_stairs_gold_block_slab.png"},
 		S("Stairs of Gold"),
-		nil, 6, nil,
+		nil, nil, nil,
 		"woodlike")
 
 mcl_stairs.register_slab("ironblock", "mcl_core:ironblock",
@@ -68,21 +68,21 @@ mcl_stairs.register_stair("ironblock", "mcl_core:ironblock",
 		{pickaxey=2},
 		{"mcl_stairs_iron_block_slab.png", "default_steel_block.png", "default_steel_block.png", "default_steel_block.png", "default_steel_block.png", "mcl_stairs_iron_block_slab.png"},
 		S("Stairs of Iron"),
-		nil, 6, nil,
+		nil, nil, nil,
 		"woodlike")
 
 mcl_stairs.register_stair("stonebrickcracked", "mcl_core:stonebrickcracked",
 		{pickaxey=1},
 		{"mcl_core_stonebrick_cracked.png"},
 		S("Cracked Stone Brick Stairs"),
-		mcl_sounds.node_sound_stone_defaults(), 6, 1.5,
+		mcl_sounds.node_sound_stone_defaults(), nil, nil,
 		"woodlike")
 
 mcl_stairs.register_slab("stonebrickcracked", "mcl_core:stonebrickcracked",
 		{pickaxey=1},
 		{"mcl_core_stonebrick_cracked.png"},
 		S("Cracked Stone Brick Slab"),
-		mcl_sounds.node_sound_stone_defaults(), 6, 2,
+		mcl_sounds.node_sound_stone_defaults(), nil, nil,
 		S("Double Cracked Stone Brick Slab"))
 
 local block = {}
