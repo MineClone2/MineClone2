@@ -51,13 +51,13 @@ mcl_stairs.register_stair("cherrywood", "mcl_cherry_blossom:cherrywood",
 		{handy=1,axey=1, flammable=3,wood_stairs=1, material_wood=1, fire_encouragement=5, fire_flammability=20},
 		{"mcl_cherry_blossom_planks.png"},
 		S("Cherry Stairs"),
-		mcl_sounds.node_sound_wood_defaults(), 3, 2,
+		mcl_sounds.node_sound_wood_defaults(), nil, nil,
 		"woodlike")
 mcl_stairs.register_slab("cherrywood", "mcl_cherry_blossom:cherrywood",
 		{handy=1,axey=1, flammable=3,wood_slab=1, material_wood=1, fire_encouragement=5, fire_flammability=20},
 		{"mcl_cherry_blossom_planks.png"},
 		S("Cherry Slab"),
-		mcl_sounds.node_sound_wood_defaults(), 3, 2,
+		mcl_sounds.node_sound_wood_defaults(), nil, nil,
 		S("Double Cherry Slab"))
 
 -- Signs

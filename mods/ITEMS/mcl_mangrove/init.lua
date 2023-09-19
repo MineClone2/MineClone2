@@ -322,14 +322,14 @@ mcl_stairs.register_stair("mangrove_wood", "mcl_mangrove:mangrove_wood",
 	{handy=1,axey=1, flammable=3,wood_stairs=1, material_wood=1, fire_encouragement=5, fire_flammability=20},
 	{"mcl_mangrove_planks.png"},
 	S("Mangrove Wood Stairs"),
-	mcl_sounds.node_sound_wood_defaults(), 3, 2,
+	mcl_sounds.node_sound_wood_defaults(), nil, nil,
 	"woodlike")
 
 mcl_stairs.register_slab("mangrove_wood", "mcl_mangrove:mangrove_wood",
 	{handy=1,axey=1, flammable=3,wood_slab=1, material_wood=1, fire_encouragement=5, fire_flammability=20},
 	{"mcl_mangrove_planks.png"},
 	S("Mangrove Wood Slab"),
-	mcl_sounds.node_sound_wood_defaults(), 3, 2,
+	mcl_sounds.node_sound_wood_defaults(), nil, nil,
 	S("Double Mangrove Wood Slab"))
 
 minetest.register_craft({
