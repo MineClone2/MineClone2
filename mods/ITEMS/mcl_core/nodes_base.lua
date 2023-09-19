@@ -288,7 +288,7 @@ minetest.register_node("mcl_core:stone_smooth", {
 	sounds = mcl_sounds.node_sound_stone_defaults(),
 	is_ground_content = false,
 	_mcl_blast_resistance = 6,
-	_mcl_hardness = 1.5,
+	_mcl_hardness = 2,
 })
 
 minetest.register_node("mcl_core:granite", {

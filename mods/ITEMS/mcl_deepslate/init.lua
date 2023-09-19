@@ -38,8 +38,8 @@ minetest.register_node("mcl_deepslate:infested_deepslate", {
 	drop = "",
 	sounds = mcl_sounds.node_sound_stone_defaults(),
 	after_dig_node = spawn_silverfish,
-	_mcl_hardness = 0,
-	_mcl_blast_resistance = 0.5,
+	_mcl_hardness = 1.5,
+	_mcl_blast_resistance = 0.75,
 })
 
 minetest.register_node("mcl_deepslate:tuff", {

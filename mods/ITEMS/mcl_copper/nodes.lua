@@ -58,7 +58,7 @@ minetest.register_node("mcl_copper:block_exposed", {
 	groups = {pickaxey = 2, building_block = 1, oxidizable = 1},
 	sounds = mcl_sounds.node_sound_metal_defaults(),
 	_mcl_blast_resistance = 6,
-	_mcl_hardness = 5,
+	_mcl_hardness = 3,
 	_mcl_oxidized_variant = "mcl_copper:block_weathered",
 	_mcl_waxed_variant = "mcl_copper:waxed_block_exposed",
 	_mcl_stripped_variant = "mcl_copper:block",
@@ -72,7 +72,7 @@ minetest.register_node("mcl_copper:waxed_block_exposed", {
 	groups = {pickaxey = 2, building_block = 1, waxed = 1},
 	sounds = mcl_sounds.node_sound_metal_defaults(),
 	_mcl_blast_resistance = 6,
-	_mcl_hardness = 5,
+	_mcl_hardness = 3,
 	_mcl_stripped_variant = "mcl_copper:block_exposed",
 })
 
@@ -84,7 +84,7 @@ minetest.register_node("mcl_copper:block_weathered", {
 	groups = {pickaxey = 2, building_block = 1, oxidizable = 1},
 	sounds = mcl_sounds.node_sound_metal_defaults(),
 	_mcl_blast_resistance = 6,
-	_mcl_hardness = 5,
+	_mcl_hardness = 3,
 	_mcl_oxidized_variant = "mcl_copper:block_oxidized",
 	_mcl_waxed_variant = "mcl_copper:waxed_block_weathered",
 	_mcl_stripped_variant = "mcl_copper:block_exposed",
@@ -98,7 +98,7 @@ minetest.register_node("mcl_copper:waxed_block_weathered", {
 	groups = {pickaxey = 2, building_block = 1, waxed = 1},
 	sounds = mcl_sounds.node_sound_metal_defaults(),
 	_mcl_blast_resistance = 6,
-	_mcl_hardness = 5,
+	_mcl_hardness = 3,
 	_mcl_stripped_variant = "mcl_copper:block_weathered",
 })
 
@@ -110,7 +110,7 @@ minetest.register_node("mcl_copper:block_oxidized", {
 	groups = {pickaxey = 2, building_block = 1},
 	sounds = mcl_sounds.node_sound_metal_defaults(),
 	_mcl_blast_resistance = 6,
-	_mcl_hardness = 5,
+	_mcl_hardness = 3,
 	_mcl_waxed_variant = "mcl_copper:waxed_block_oxidized",
 	_mcl_stripped_variant = "mcl_copper:block_weathered",
 })
@@ -123,7 +123,7 @@ minetest.register_node("mcl_copper:waxed_block_oxidized", {
 	groups = {pickaxey = 2, building_block = 1, waxed = 1},
 	sounds = mcl_sounds.node_sound_metal_defaults(),
 	_mcl_blast_resistance = 6,
-	_mcl_hardness = 5,
+	_mcl_hardness = 3,
 	_mcl_stripped_variant = "mcl_copper:block_oxidized",
 })
 
@@ -135,7 +135,7 @@ minetest.register_node("mcl_copper:block_cut", {
 	groups = {pickaxey = 2, building_block = 1, oxidizable = 1},
 	sounds = mcl_sounds.node_sound_metal_defaults(),
 	_mcl_blast_resistance = 6,
-	_mcl_hardness = 5,
+	_mcl_hardness = 3,
 	_mcl_oxidized_variant = "mcl_copper:block_exposed_cut",
 	_mcl_waxed_variant = "mcl_copper:waxed_block_cut",
 })
@@ -148,7 +148,7 @@ minetest.register_node("mcl_copper:waxed_block_cut", {
 	groups = {pickaxey = 2, building_block = 1, waxed = 1},
 	sounds = mcl_sounds.node_sound_metal_defaults(),
 	_mcl_blast_resistance = 6,
-	_mcl_hardness = 5,
+	_mcl_hardness = 3,
 	_mcl_stripped_variant = "mcl_copper:block_cut",
 })
 
@@ -160,7 +160,7 @@ minetest.register_node("mcl_copper:block_exposed_cut", {
 	groups = {pickaxey = 2, building_block = 1, oxidizable = 1},
 	sounds = mcl_sounds.node_sound_metal_defaults(),
 	_mcl_blast_resistance = 6,
-	_mcl_hardness = 5,
+	_mcl_hardness = 3,
 	_mcl_waxed_variant = "mcl_copper:waxed_block_exposed_cut",
 	_mcl_oxidized_variant = "mcl_copper:block_weathered_cut",
 	_mcl_stripped_variant = "mcl_copper:block_cut",
@@ -174,7 +174,7 @@ minetest.register_node("mcl_copper:waxed_block_exposed_cut", {
 	groups = {pickaxey = 2, building_block = 1, waxed = 1},
 	sounds = mcl_sounds.node_sound_metal_defaults(),
 	_mcl_blast_resistance = 6,
-	_mcl_hardness = 5,
+	_mcl_hardness = 3,
 	_mcl_stripped_variant = "mcl_copper:block_exposed_cut",
 })
 
@@ -186,7 +186,7 @@ minetest.register_node("mcl_copper:block_weathered_cut", {
 	groups = {pickaxey = 2, building_block = 1, oxidizable = 1},
 	sounds = mcl_sounds.node_sound_metal_defaults(),
 	_mcl_blast_resistance = 6,
-	_mcl_hardness = 5,
+	_mcl_hardness = 3,
 	_mcl_stripped_variant = "mcl_copper:block_exposed_cut",
 	_mcl_oxidized_variant = "mcl_copper:block_oxidized_cut",
 	_mcl_waxed_variant = "mcl_copper:waxed_block_weathered_cut",
@@ -200,7 +200,7 @@ minetest.register_node("mcl_copper:waxed_block_weathered_cut", {
 	groups = {pickaxey = 2, building_block = 1, waxed = 1},
 	sounds = mcl_sounds.node_sound_metal_defaults(),
 	_mcl_blast_resistance = 6,
-	_mcl_hardness = 5,
+	_mcl_hardness = 3,
 	_mcl_stripped_variant = "mcl_copper:block_weathered_cut",
 })
 
@@ -212,7 +212,7 @@ minetest.register_node("mcl_copper:block_oxidized_cut", {
 	groups = {pickaxey = 2, building_block = 1},
 	sounds = mcl_sounds.node_sound_metal_defaults(),
 	_mcl_blast_resistance = 6,
-	_mcl_hardness = 5,
+	_mcl_hardness = 3,
 	_mcl_stripped_variant = "mcl_copper:block_weathered_cut",
 	_mcl_waxed_variant = "mcl_copper:waxed_block_oxidized_cut",
 })
@@ -225,7 +225,7 @@ minetest.register_node("mcl_copper:waxed_block_oxidized_cut", {
 	groups = {pickaxey = 2, building_block = 1, waxed = 1},
 	sounds = mcl_sounds.node_sound_metal_defaults(),
 	_mcl_blast_resistance = 6,
-	_mcl_hardness = 5,
+	_mcl_hardness = 3,
 	_mcl_stripped_variant = "mcl_copper:block_oxidized_cut",
 })
 
@@ -289,54 +289,54 @@ mcl_stairs.register_stair("copper_cut", "mcl_copper:block_cut",
 	{pickaxey = 2, oxidizable = 1},
 	{"mcl_copper_block_cut.png", "mcl_copper_block_cut.png", "mcl_copper_block_cut.png", "mcl_copper_block_cut.png", "mcl_copper_block_cut.png", "mcl_copper_block_cut.png"},
 	S("Stairs of Cut Copper"),
-	nil, 6, nil,
+	nil, nil, nil,
 	"woodlike")
 
 mcl_stairs.register_stair("waxed_copper_cut", "mcl_copper:waxed_block_cut",
 	{pickaxey = 2, waxed = 1},
 	{"mcl_copper_block_cut.png", "mcl_copper_block_cut.png", "mcl_copper_block_cut.png", "mcl_copper_block_cut.png", "mcl_copper_block_cut.png", "mcl_copper_block_cut.png"},
 	S("Waxed Stairs of Cut Copper"),
-	nil, 6, nil,
+	nil, nil, nil,
 	"woodlike")
 
 mcl_stairs.register_stair("copper_exposed_cut", "mcl_copper:block_exposed_cut",
 	{pickaxey = 2, oxidizable = 1},
 	{"mcl_copper_exposed_cut.png", "mcl_copper_exposed_cut.png", "mcl_copper_exposed_cut.png", "mcl_copper_exposed_cut.png", "mcl_copper_exposed_cut.png", "mcl_copper_exposed_cut.png"},
 	S("Stairs of Exposed Cut Copper"),
-	nil, 6, nil,
+	nil, nil, nil,
 	"woodlike")
 
 mcl_stairs.register_stair("waxed_copper_exposed_cut", "mcl_copper:waxed_block_exposed_cut",
 	{pickaxey = 2, waxed = 1},
 	{"mcl_copper_exposed_cut.png", "mcl_copper_exposed_cut.png", "mcl_copper_exposed_cut.png", "mcl_copper_exposed_cut.png", "mcl_copper_exposed_cut.png", "mcl_copper_exposed_cut.png"},
 	S("Waxed Stairs of Exposed Cut Copper"),
-	nil, 6, nil,
+	nil, nil, nil,
 	"woodlike")
 
 mcl_stairs.register_stair("copper_weathered_cut", "mcl_copper:block_weathered_cut",
 	{pickaxey = 2, oxidizable = 1},
 	{"mcl_copper_weathered_cut.png", "mcl_copper_weathered_cut.png", "mcl_copper_weathered_cut.png", "mcl_copper_weathered_cut.png", "mcl_copper_weathered_cut.png", "mcl_copper_weathered_cut.png"},
 	S("Stairs of Weathered Cut Copper"),
-	nil, 6, nil,
+	nil, nil, nil,
 	"woodlike")
 
 mcl_stairs.register_stair("waxed_copper_weathered_cut", "mcl_copper:waxed_block_weathered_cut",
 	{pickaxey = 2, waxed = 1},
 	{"mcl_copper_weathered_cut.png", "mcl_copper_weathered_cut.png", "mcl_copper_weathered_cut.png", "mcl_copper_weathered_cut.png", "mcl_copper_weathered_cut.png", "mcl_copper_weathered_cut.png"},
 	S("Waxed Stairs of Weathered Cut Copper"),
-	nil, 6, nil,
+	nil, nil, nil,
 	"woodlike")
 
 mcl_stairs.register_stair("copper_oxidized_cut", "mcl_copper:block_oxidized_cut",
 	{pickaxey = 2},
 	{"mcl_copper_oxidized_cut.png", "mcl_copper_oxidized_cut.png", "mcl_copper_oxidized_cut.png", "mcl_copper_oxidized_cut.png", "mcl_copper_oxidized_cut.png", "mcl_copper_oxidized_cut.png"},
 	S("Stairs of Oxidized Cut Copper"),
-	nil, 6, nil,
+	nil, nil, nil,
 	"woodlike")
 
 mcl_stairs.register_stair("waxed_copper_oxidized_cut", "mcl_copper:waxed_block_oxidized_cut",
 	{pickaxey = 2, waxed = 1},
 	{"mcl_copper_oxidized_cut.png", "mcl_copper_oxidized_cut.png", "mcl_copper_oxidized_cut.png", "mcl_copper_oxidized_cut.png", "mcl_copper_oxidized_cut.png", "mcl_copper_oxidized_cut.png"},
 	S("Waxed Stairs of Oxidized Cut Copper"),
-	nil, 6, nil,
+	nil, nil, nil,
 	"woodlike")
