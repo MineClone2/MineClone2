@@ -162,7 +162,7 @@ for _, row in ipairs(block.dyes) do
 		stack_max = 64,
 		is_ground_content = false,
 		sounds = mcl_sounds.node_sound_stone_defaults(),
-		_mcl_blast_resistance = 4.2,
+		_mcl_blast_resistance = 1.4,
 		_mcl_hardness = 1.4,
 		on_rotate = on_rotate,
 	})

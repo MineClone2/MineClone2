@@ -44,7 +44,7 @@ minetest.register_node("mcl_farming:soil_wet", {
 	end,
 	groups = {handy=1,shovely=1, not_in_creative_inventory=1, dirtifies_below_solid=1, dirtifier=1, soil=3, soil_sapling=1 },
 	sounds = mcl_sounds.node_sound_dirt_defaults(),
-	_mcl_blast_resistance = 0.5,
+	_mcl_blast_resistance = 0.6,
 	_mcl_hardness = 0.6,
 })
 

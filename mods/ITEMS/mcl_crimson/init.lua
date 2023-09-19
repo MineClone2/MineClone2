@@ -191,8 +191,7 @@ minetest.register_node("mcl_crimson:twisting_vines", {
 		"mcl_crimson:twisting_vines",
 		"mcl_crimson:twisting_vines",
 	},
-	_mcl_blast_resistance = 0.2,
-	_mcl_hardness = 0.2,
+	_mcl_blast_resistance = 0,
 })
 
 minetest.register_node("mcl_crimson:weeping_vines", {
@@ -281,8 +280,7 @@ minetest.register_node("mcl_crimson:weeping_vines", {
 		"mcl_crimson:weeping_vines",
 		"mcl_crimson:weeping_vines",
 	},
-	_mcl_blast_resistance = 0.2,
-	_mcl_hardness = 0.2,
+	_mcl_blast_resistance = 0,
 })
 
 minetest.register_node("mcl_crimson:nether_sprouts", {

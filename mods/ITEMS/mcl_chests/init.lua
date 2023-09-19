@@ -1215,7 +1215,7 @@ minetest.register_node("mcl_chests:ender_chest_small", {
 			player_chest_close(sender)
 		end
 	end,
-	_mcl_blast_resistance = 3000,
+	_mcl_blast_resistance = 600,
 	_mcl_hardness = 22.5,
 	_mcl_silk_touch_drop = { "mcl_chests:ender_chest" },
 	on_rotate = simple_rotate,
@@ -1517,7 +1517,7 @@ for color, desc in pairs(boxtypes) do
 				return 0
 			end
 		end,
-		_mcl_blast_resistance = 6,
+		_mcl_blast_resistance = 2,
 		_mcl_hardness = 2,
 		_mcl_hoppers_on_try_push = function(pos, hop_pos, hop_inv, hop_list)
 			local meta = minetest.get_meta(pos)
