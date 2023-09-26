@@ -210,7 +210,7 @@ function mcl_beds.register_bed(name, def)
 		stack_max = 1,
 		groups = {handy=1, bed = 1, dig_by_piston=1, bouncy=66, fall_damage_add_percent=-50, deco_block = 1, flammable=-1},
 		_mcl_hardness = 0.2,
-		_mcl_blast_resistance = 1,
+		_mcl_blast_resistance = 0.2,
 		sounds = def.sounds or default_sounds,
 		selection_box = common_box,
 		collision_box = common_box,
