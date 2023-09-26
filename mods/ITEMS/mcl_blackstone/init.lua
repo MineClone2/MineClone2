@@ -226,10 +226,7 @@ mcl_stairs.register_stair_and_slab("blackstone_brick_polished", "mcl_blackstone:
 		S("Double Polished Blackstone Brick Stair Slab"), nil)
 
 --Wall
-mcl_walls.register_wall(
-	"mcl_blackstone:wall",
-	S("Blackstone Wall"),
-	"mcl_blackstone:blackstone")
+mcl_walls.register_wall("mcl_blackstone:wall", S("Blackstone Wall"), "mcl_blackstone:blackstone")
 
 --lavacooling
 

@@ -97,10 +97,8 @@ local full_blocks = {
 * inventory_image: Inventory image (optional)
 * groups: Base group memberships (optional, default is {pickaxey=1})
 * sounds: Sound table (optional, default is stone)
-* hardness: Hardness of node (optional, default matches `source` node or fallback value 2)
-* blast_resistance: Blast resistance of node (optional, default matches `source` node or fallback value 6)
 ]]
-function mcl_walls.register_wall(nodename, description, source, tiles, inventory_image, groups, sounds, hardness, blast_resistance)
+function mcl_walls.register_wall(nodename, description, source, tiles, inventory_image, groups, sounds)
 
 	local base_groups = groups
 	if not base_groups then
@@ -114,29 +112,15 @@ function mcl_walls.register_wall(nodename, description, source, tiles, inventory
 	local main_node_groups = table.copy(base_groups)
 	main_node_groups.deco_block = 1
 
-	if source then
-		-- Default values from `source` node
-		if not hardness then
-			hardness = minetest.registered_nodes[source]._mcl_hardness
-		end
-		if not blast_resistance then
-			blast_resistance = minetest.registered_nodes[source]._mcl_blast_resistance
-		end
-		if not sounds then
-			sounds = minetest.registered_nodes[source].sounds
-		end
-		if not tiles then
-			if minetest.registered_nodes[source] then
-				tiles = minetest.registered_nodes[source].tiles
-			end
-		end
-	else
-		-- Fallback in case no `source` given
-		if not hardness then
-			hardness = 2
-		end
-		if not blast_resistance then
-			blast_resistance = 6
+	-- TODO: Stop hardcoding blast resistance
+
+	if not sounds then
+		sounds = mcl_sounds.node_sound_stone_defaults()
+	end
+
+	if (not tiles) and source then
+		if minetest.registered_nodes[source] then
+			tiles = minetest.registered_nodes[source].tiles
 		end
 	end
 
@@ -185,8 +169,8 @@ function mcl_walls.register_wall(nodename, description, source, tiles, inventory
 				fixed = take
 			},
 			sounds = sounds,
-			_mcl_blast_resistance = blast_resistance,
-			_mcl_hardness = hardness,
+			_mcl_blast_resistance = 6,
+			_mcl_hardness = 2,
 		})
 
 		-- Add entry alias for the Help
@@ -213,8 +197,8 @@ function mcl_walls.register_wall(nodename, description, source, tiles, inventory
 			fixed = {pillar, full_blocks[1]}
 		},
 		sounds = sounds,
-		_mcl_blast_resistance = blast_resistance,
-		_mcl_hardness = hardness,
+		_mcl_blast_resistance = 6,
+		_mcl_hardness = 2,
 	})
 	-- Add entry alias for the Help
 	if minetest.get_modpath("doc") then
@@ -239,8 +223,8 @@ function mcl_walls.register_wall(nodename, description, source, tiles, inventory
 			fixed = {pillar, full_blocks[2]}
 		},
 		sounds = sounds,
-		_mcl_blast_resistance = blast_resistance,
-		_mcl_hardness = hardness,
+		_mcl_blast_resistance = 6,
+		_mcl_hardness = 2,
 	})
 	-- Add entry alias for the Help
 	if minetest.get_modpath("doc") then
@@ -271,8 +255,8 @@ function mcl_walls.register_wall(nodename, description, source, tiles, inventory
 		collisionbox = {-0.2, 0, -0.2, 0.2, 1.4, 0.2},
 		on_construct = update_wall,
 		sounds = sounds,
-		_mcl_blast_resistance = blast_resistance,
-		_mcl_hardness = hardness,
+		_mcl_blast_resistance = 6,
+		_mcl_hardness = 2,
 	})
 	if source then
 		minetest.register_craft({
