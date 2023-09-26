@@ -66,16 +66,9 @@ mcl_signs.register_sign_custom("mcl_cherry_blossom", "_cherrywood",
 		"mcl_cherry_blossom_sign_inv.png", "mcl_cherry_blossom_sign_inv.png", S("Cherry Sign"))
 
 -- Fences & Gates
-mcl_fences.register_fence_and_fence_gate(
-	"cherry_fence",
-	S("Cherry Fence"),
-	S("Cherry Gate"),
-	"mcl_cherry_blossom_planks.png",
-	{handy=1, axey=1, flammable=2, fence_wood=1, fire_encouragement=5, fire_flammability=20},
-	minetest.registered_nodes["mcl_core:wood"]._mcl_hardness,
-	minetest.registered_nodes["mcl_core:wood"]._mcl_blast_resistance,
-	{"group:fence_wood"},
-	mcl_sounds.node_sound_wood_defaults())
+mcl_fences.register_fence_and_fence_gate("cherry_fence", S("Cherry Fence"), S("Cherry Gate"),
+		"mcl_cherry_blossom_planks.png", {handy=1, axey=1, flammable=2, fence_wood=1, fire_encouragement=5, fire_flammability=20}, 2, 15,
+		{"group:fence_wood"}, mcl_sounds.node_sound_wood_defaults())
 
 -- Redstone
 mesecon.register_pressure_plate(

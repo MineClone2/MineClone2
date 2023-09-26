@@ -192,23 +192,10 @@ if minetest.get_modpath("mcl_fences") then
 	local wood_groups = { handy = 1, axey = 1, flammable = 2, fence_wood = 1, fire_encouragement = 5, fire_flammability = 20 }
 	local wood_connect = { "group:fence_wood" }
 
-	local fence_id = mcl_fences.register_fence(
-		id,
-		S("Bamboo Fence"),
-		"mcl_bamboo_fence_bamboo.png",
-		wood_groups,
-		minetest.registered_nodes["mcl_core:wood"]._mcl_hardness,
-		minetest.registered_nodes["mcl_core:wood"]._mcl_blast_resistance,
-		wood_connect, node_sound)
-
-	local gate_id = mcl_fences.register_fence_gate(
-		id,
-		S("Bamboo Fence Gate"),
-		"mcl_bamboo_fence_gate_bamboo.png",
-		wood_groups,
-		minetest.registered_nodes["mcl_core:wood"]._mcl_hardness,
-		minetest.registered_nodes["mcl_core:wood"]._mcl_blast_resistance,
-		node_sound) -- note: about missing params.. will use defaults.
+	local fence_id = mcl_fences.register_fence(id, S("Bamboo Fence"), "mcl_bamboo_fence_bamboo.png", wood_groups,
+			2, 15, wood_connect, node_sound)
+	local gate_id = mcl_fences.register_fence_gate(id, S("Bamboo Fence Gate"), "mcl_bamboo_fence_gate_bamboo.png",
+			wood_groups, 2, 15, node_sound) -- note: about missing params.. will use defaults.
 
 	mcl_bamboo.mcl_log(dump(fence_id))
 	mcl_bamboo.mcl_log(dump(gate_id))
