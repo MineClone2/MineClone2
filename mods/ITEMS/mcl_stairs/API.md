@@ -11,7 +11,8 @@ mcl_stairs.register_stair_and_slab_simple("platinum", "example:platinum", "Plati
 ```
 
 ## `mcl_stairs.register_stair_and_slab_simple(subname, sourcenode, desc_stair, desc_slab, double_description, corner_stair_texture_override)`
-Register a simple stair and a slab. The stair and slab will inherit all attributes from `sourcenode`. The `sourcenode` is also used as the item for crafting recipes.
+Register a simple stair and a slab. The stair and slab will inherit all attributes from `sourcenode`. The `sourcenode` is also used as the item for crafting recipes. If multiple nodes should craft into the same stairs/slab, see 
+`mcl_stairs.register_craft_stairs` or `mcl_stairs.register_craft_slab`
 
 This function is meant for simple nodes; if you need more flexibility, use one of the other functions instead.
 
@@ -44,7 +45,7 @@ The itemstrings for the registered nodes will be of the form:
 
 ### Parameters
 * `subname`: Name fragment for node itemstrings (see above)
-* `recipeitem`: Item for crafting recipe. Use `group:` prefix to use a group instead
+* `recipeitem`: Item for crafting recipe and attribute inheritance. Do not use `group:` prefix here, alternative recipes can be registered using `mcl_stairs.register_craft_stairs(subname, recipeitem_or_group)`.
 * `groups`: Groups used for stair
 * `images`: Textures
 * `description`: Stair description/tooltip
@@ -80,4 +81,36 @@ The itemstrings for the registered nodes will be of the form:
 ### Parameters
 * `double_description`: Node description/tooltip for double slab
 * Other parameters: Same as for `register_stair`
+
+## `mcl_stairs.register_craft_stairs(subname, recipeitem)`
+Just registers a recipe for `mcl_stairs:stair_<subname>`.
+Useful if a node variant should craft the same stairs as the base node, since the above functions use the same
+parameter for crafting material and attribute inheritance.
+e.g. 6 Purpur Pillar -> 4 Purpur Stairs is an alternate recipe.
+
+Creates staircase recipes with 6 input items, both left-facing and right-facing. Outputs 4 stairs.
+
+The itemstring for the output node will be of the form:
+
+* `mcl_stairs:stair_<subname>`: Normal stair
+
+### Parameters
+* `subname`: Name fragment for node itemstring (see above)
+* `recipeitem`: Item for crafting recipe. Use `group:` prefix to use a group instead
+
+## `mcl_stairs.register_craft_slab(subname, recipeitem)`
+Just registers a recipe for `mcl_stairs:slab_<subname>`.
+Useful if a node variant should craft the same stairs as the base node, since the above functions use the same
+parameter for crafting material and attribute inheritance.
+e.g. 3 Quartz Pillar -> 6 Quartz Slab is an alternate recipe.
+
+Creates slab recipe with 3 input items in any horizontal line. Outputs 6 slabs.
+
+The itemstring for the output node will be of the form:
+
+* `mcl_stairs:slab_<subname>`: Slab
+
+### Parameters
+* `subname`: Name fragment for node itemstring (see above)
+* `recipeitem`: Item for crafting recipe. Use `group:` prefix to use a group instead
 
