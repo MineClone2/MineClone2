@@ -462,17 +462,18 @@ function mcl_potions.get_alchemy(ingr, pot)
 	return false
 end
 
-mcl_mobs.effect_functions["poison"] = mcl_potions.poison_func
-mcl_mobs.effect_functions["regeneration"] = mcl_potions.regeneration_func
-mcl_mobs.effect_functions["invisibility"] = mcl_potions.invisiblility_func
-mcl_mobs.effect_functions["fire_resistance"] = mcl_potions.fire_resistance_func
-mcl_mobs.effect_functions["night_vision"] = mcl_potions.night_vision_func
-mcl_mobs.effect_functions["water_breathing"] = mcl_potions.water_breathing_func
-mcl_mobs.effect_functions["leaping"] = mcl_potions.leaping_func
-mcl_mobs.effect_functions["swiftness"] = mcl_potions.swiftness_func
-mcl_mobs.effect_functions["heal"] = mcl_potions.healing_func
-mcl_mobs.effect_functions["bad_omen"] = mcl_potions.bad_omen_func
-mcl_mobs.effect_functions["withering"] = mcl_potions.withering_func
+-- TODO replace all calls to the old API with new API calls in other mods
+-- mcl_mobs.effect_functions["poison"] = mcl_potions.poison_func
+-- mcl_mobs.effect_functions["regeneration"] = mcl_potions.regeneration_func
+-- mcl_mobs.effect_functions["invisibility"] = mcl_potions.invisiblility_func
+-- mcl_mobs.effect_functions["fire_resistance"] = mcl_potions.fire_resistance_func
+-- mcl_mobs.effect_functions["night_vision"] = mcl_potions.night_vision_func
+-- mcl_mobs.effect_functions["water_breathing"] = mcl_potions.water_breathing_func
+-- mcl_mobs.effect_functions["leaping"] = mcl_potions.leaping_func
+-- mcl_mobs.effect_functions["swiftness"] = mcl_potions.swiftness_func
+-- mcl_mobs.effect_functions["heal"] = mcl_potions.healing_func
+-- mcl_mobs.effect_functions["bad_omen"] = mcl_potions.bad_omen_func
+-- mcl_mobs.effect_functions["withering"] = mcl_potions.withering_func
 
 -- give withering to players in a wither rose
 local etime = 0

@@ -48,7 +48,7 @@ local function generate_linear_lvl_to_fac(l1, l2)
 end
 
 local function generate_rational_lvl_to_fac(l1, l2)
-	local a = (l1 - l2) / 1.5
+	local a = (l1 - l2) * 2
 	local b = 2*l2 - l1
 	return function(level)
 		if level == 0 then return 0 end
@@ -88,6 +88,15 @@ function mcl_potions.register_effect(def)
 	local modname = minetest.get_current_modname()
 	if def.name == nil then
 		error("Unable to register effect: name is nil")
+	end
+	if def.name == "list" then
+		error("Unable to register effect: list is a reserved word")
+	end
+	if def.name == "heal" then
+		error("Unable to register effect: heal is a reserved word")
+	end
+	if registered_effects[name] then
+		error("Effect named "..name.." already registered!")
 	end
 	local name = def.name
 	local pdef = {}
@@ -139,6 +148,18 @@ function mcl_potions.register_effect(def)
 	end
 	registered_effects[name] = pdef
 	EF[name] = {}
+end
+
+function mcl_potions.get_registered_effects()
+	return table.copy(registered_effects)
+end
+
+function mcl_potions.is_effect_registered(name)
+	if registered_effects[name] then
+		return true
+	else
+		return false
+	end
 end
 
 mcl_potions.register_effect({
@@ -891,7 +912,7 @@ function mcl_potions._load_player_effects(player)
 
 	-- new API effects + on_load for loaded legacy effects
 	for name, effect in pairs(registered_effects) do
-		local loaded = minetest.deserialize(meta:get_string("mcl_potions:"..name))
+		local loaded = minetest.deserialize(meta:get_string("mcl_potions:_EF_"..name))
 		if loaded then EF[name][player] = loaded end
 		if EF[name][player] and effect.on_load then
 			effect.on_load(player, EF[name][player].factor)
@@ -1133,10 +1154,8 @@ local function target_valid(object, name)
 end
 
 function mcl_potions.give_effect(name, object, factor, duration)
-	if not target_valid(object, name) then return false end
-
 	local edef = registered_effects[name]
-	if not edef then return false end
+	if not edef or not target_valid(object, name) then return false end
 	if not EF[name][object] then
 		local vals = {dur = duration, timer = 0,}
 		if edef.uses_factor then vals.factor = factor end
@@ -1160,6 +1179,8 @@ function mcl_potions.give_effect(name, object, factor, duration)
 	end
 
 	if object:is_player() then potions_set_hud(object) end
+
+	return true
 end
 
 function mcl_potions.give_effect_by_level(name, object, level, duration)
