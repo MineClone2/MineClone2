@@ -9,8 +9,8 @@ local S = minetest.get_translator(minetest.get_current_modname())
 
 
 minetest.register_chatcommand("effect",{
-	params = S("<effect> <duration> [<level>] [<factor>]"),
-	description = S("Add a status effect to yourself. Arguments: <effect>: name of status effect, e.g. poison. <duration>: duration in seconds. <level>: effect power determinant, bigger level results in more powerful effect for effects that depend on the level, defaults to 1, pass F to use low-level factor instead. <factor>: effect strength modifier, can mean different things depending on the effect."),
+	params = S("<effect>|heal|list <duration|heal-amount> [<level>] [<factor>]"),
+	description = S("Add a status effect to yourself. Arguments: <effect>: name of status effect, e.g. poison. Passing list as effect name lists available effects. Passing heal as effect name heals (or harms) by amount designed by the next parameter. <duration>: duration in seconds. (<heal-amount>: amount of healing when the effect is heal, passing a negative value subtracts health.) <level>: effect power determinant, bigger level results in more powerful effect for effects that depend on the level, defaults to 1, pass F to use low-level factor instead. <factor>: effect strength modifier, can mean different things depending on the effect."),
 	privs = {server = true},
 	func = function(name, params)
 
@@ -30,7 +30,21 @@ minetest.register_chatcommand("effect",{
 				effects = effects .. ", " .. name
 			end
 			return true, effects
-		elseif not tonumber(P[2])then
+		elseif P[1] == "heal" then
+			local hp = tonumber(P[2])
+			if not hp or hp == 0 then
+				return false, S("Missing or invalid heal amount parameter!")
+			else
+				mcl_potions.healing_func(minetest.get_player_by_name(name), hp)
+				if hp > 0 then
+					if hp < 1 then hp = 1 end
+					return true, S("Player @1 healed by @2 HP.", name, hp)
+				else
+					if hp > -1 then hp = -1 end
+					return true, S("Player @1 harmed by @2 HP.", name, hp)
+				end
+			end
+		elseif not tonumber(P[2]) then
 			return false, S("Missing or invalid duration parameter!")
 		elseif P[3] and not tonumber(P[3]) and P[3] ~= "F" then
 			return false, S("Invalid level parameter!")
