@@ -1,5 +1,4 @@
 local S = minetest.get_translator(minetest.get_current_modname())
---local brewhelp = S("Try different combinations to create potions.")
 
 local function potion_image(colorstring, opacity)
 	if not opacity then
@@ -89,6 +88,178 @@ function return_on_use(def, effect, dur)
 		return itemstack
 	end
 end
+
+local function generate_on_use(effects, color, on_use, custom_effect)
+	return function(itemstack, user, pointed_thing)
+		if pointed_thing.type == "node" then
+			if user and not user:get_player_control().sneak then
+				local node = minetest.get_node(pointed_thing.under)
+				if minetest.registered_nodes[node.name] and minetest.registered_nodes[node.name].on_rightclick then
+					return minetest.registered_nodes[node.name].on_rightclick(pointed_thing.under, node, user, itemstack) or itemstack
+				end
+			end
+		elseif pointed_thing.type == "object" then
+			return itemstack
+		end
+
+		local potency = itemstack:get_meta():get_int("mcl_potions:potion_potent")
+		local plus = itemstack:get_meta():get_int("mcl_potions:potion_plus")
+		local ef_level
+		local dur
+		for name, details in pairs(effects) do
+			if details.uses_level then
+				ef_level = details.level + details.level_scaling * (potency)
+			else
+				ef_level = details.level
+			end
+			if details.dur_variable then
+				dur = details.dur * math.pow(mcl_potions.PLUS_FACTOR, plus)
+				if potency>0 and details.uses_level then
+					dur = dur / math.pow(mcl_potions.POTENT_FACTOR, potency)
+				end
+			else
+				dur = details.dur
+			end
+			mcl_potions.give_effect_by_level(name, user, ef_level, dur)
+		end
+
+		if on_use then on_use(user, potency+1) end
+		if custom_effect then custom_effect(user, potency+1) end
+
+		itemstack = minetest.do_item_eat(0, "mcl_potions:glass_bottle", itemstack, user, pointed_thing)
+		if itemstack then mcl_potions._use_potion(user, color) end
+
+		return itemstack
+	end
+end
+
+-- API - registers a potion
+-- required parameters in def:
+-- name - string - potion name in code
+-- optional parameters in def:
+-- desc_prefix - translated string - part of visible potion name, comes before the word "Potion"
+-- desc_suffix - translated string - part of visible potion name, comes after the word "Potion"
+-- _tt - translated string - custom tooltip text
+-- _dynamic_tt - function(level) - returns custom tooltip text dependent on potion level
+-- _longdesc - translated string - text for in-game documentation
+-- stack_max - int - max stack size - defaults to 1
+-- image - string - name of a custom texture of the potion icon
+-- color - string - colorstring for potion icon when image is not defined - defaults to #0000FF
+-- groups - table - item groups definition -
+--   - must contain _mcl_potion=1 for tooltip to include dynamic_tt and effects
+--   - defaults to {brewitem=1, food=3, can_eat_when_full=1, _mcl_potion=1}
+-- _effect_list - table - all the effects dealt by the potion in the format of tables
+-- -- the name of each sub-table should be a name of a registered effect, and fields can be the following:
+-- -- -- uses_level - bool - whether the level of the potion affects the level of the effect -
+-- -- --   - defaults to the uses_factor field of the effect definition
+-- -- -- level - int - used as the effect level if uses_level is false and for lvl1 potions - defaults to 1
+-- -- -- level_scaling - int - used as the number of effect levels added per potion level - defaults to 1 -
+-- -- --   - this has no effect if uses_level is false
+-- -- -- dur - float - duration of the effect in seconds - defaults to mcl_potions.DURATION
+-- -- -- dur_variable - bool - whether variants of the potion should have the length of this effect changed -
+-- -- --   - defaults to true
+-- -- --   - if at least one effect has this set to true, the potion has a "plus" variant
+-- uses_level - bool - whether the potion should come at different levels -
+--   - defaults to true if uses_level is true for at least one effect, else false
+-- drinkable - bool - defaults to true
+-- has_splash - bool - defaults to true
+-- has_lingering - bool - defaults to true
+-- has_arrow - bool - defaults to false
+-- has_potent - bool - whether there is a potent (e.g. II) variant - defaults to the value of uses_level
+-- default_potent_level - int - effect level used for the potent variant - defaults to 2
+-- custom_on_use - function(user, level) - called when the potion is drunk
+-- custom_effect - function(object, level) - called when the potion effects are applied
+-- custom_splash_effect - function(pos, level) - called when the splash potion explodes
+-- custom_linger_effect - function(pos, radius, level) - called on the lingering potion step
+function mcl_potions.register_potion(def)
+	local modname = minetest.get_current_modname()
+	local name = def.name
+	if name == nil then
+		error("Unable to register potion: name is nil")
+	end
+	if type(name) ~= "string" then
+		error("Unable to register potion: name is not a string")
+	end
+	local pdef = {}
+	pdef.description = S("@1 Potion @2", def.desc_prefix, def.desc_suffix)
+	pdef._tt_help = def._tt
+	pdef._dynamic_tt = def._dynamic_tt
+	local potion_longdesc = def._longdesc
+	if def._effect_list then
+		potion_longdesc = potion_intro .. "\n" .. def._longdesc
+	end
+	pdef._doc_items_longdesc = potion_longdesc
+	if def.drinkable ~= false then pdef._doc_items_usagehelp = how_to_drink end
+	pdef.stack_max = def.stack_max or 1
+	local color = def.color or "#0000FF"
+	pdef.inventory_image = def.image or potion_image(color)
+	pdef.wield_image = pdef.inventory_image
+	pdef.groups = def.groups or {brewitem=1, food=3, can_eat_when_full=1, _mcl_potion=1}
+
+	pdef._effect_list = {}
+	local effect
+	local uses_level = false
+	local has_plus = false
+	for name, details in pairs(def._effect_list) do
+		effect = mcl_potions.registered_effects[name]
+		if effect then
+			local ulvl
+			if details.uses_level ~= nil then ulvl = details.uses_level
+			else ulvl = effect.uses_factor end
+			if ulvl then uses_level = true end
+			local durvar = true
+			if details.dur_variable ~= nil then durvar = details.dur_variable end
+			if durvar then has_plus = true end
+			pdef._effect_list[name] = {
+				uses_level = ulvl,
+				level = details.level or 1,
+				level_scaling = details.level_scaling or 1,
+				dur = details.dur or mcl_potions.DURATION,
+				dur_variable = durvar,
+			}
+		else
+			error("Unable to register potion: effect not registered")
+		end
+	end
+	if def.uses_level ~= nil then uses_level = def.uses_level end
+	pdef.uses_level = uses_level
+	if def.has_potent ~= nil then pdef.has_potent = def.has_potent
+	else pdef.has_potent = uses_level end
+	pdef.has_plus = has_plus
+	local on_use
+	if def.drinkable ~= false then
+		on_use = generate_on_use(pdef._effect_list, color, def.custom_on_use, def.custom_effect)
+	end
+	pdef.on_place = on_use
+	pdef.on_secondary_use = on_use
+
+	minetest.register_craftitem(modname..":"..name, pdef)
+
+end
+
+mcl_potions.register_potion({
+	name = "trolling",
+	desc_prefix = S("Mighty"),
+	desc_suffix = S("of Trolling"),
+	_tt = "trololo",
+	_dynamic_tt = function(level)
+		return "trolololoooololo"
+	end,
+	_longdesc = "Trolololololo",
+	stack_max = 2,
+	color = "#00AA00",
+	_effect_list = {
+		night_vision = {},
+		strength = {},
+		swiftness = {
+			uses_level = false,
+			level = 2,
+		},
+		poison = {
+			dur = 10,
+		},
+	},
+})
 
 
 local function register_potion(def)
