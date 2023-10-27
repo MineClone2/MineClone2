@@ -56,7 +56,7 @@ end
 function mcl_enchanting.get_enchantment_description(enchantment, level)
 	local enchantment_def = mcl_enchanting.enchantments[enchantment]
 	return enchantment_def.name ..
-		(enchantment_def.max_level == 1 and "" or " " .. mcl_enchanting.roman_numerals.toRoman(level))
+		(enchantment_def.max_level == 1 and "" or " " .. mcl_util.to_roman(level))
 end
 
 function mcl_enchanting.get_colorized_enchantment_description(enchantment, level)
