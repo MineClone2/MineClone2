@@ -1,5 +1,8 @@
+local S = minetest.get_translator(minetest.get_current_modname())
+
 local EF = {}
-local registered_effects = {}
+mcl_potions.registered_effects = {}
+local registered_effects = mcl_potions.registered_effects -- shorthand ref
 
 local EFFECT_TYPES = 0
 minetest.register_on_mods_loaded(function()
@@ -7,7 +10,6 @@ minetest.register_on_mods_loaded(function()
 		EFFECT_TYPES = EFFECT_TYPES + 1
 	end
 end)
-
 
 -- ██████╗░███████╗░██████╗░██╗░██████╗████████╗███████╗██████╗
 -- ██╔══██╗██╔════╝██╔════╝░██║██╔════╝╚══██╔══╝██╔════╝██╔══██╗
@@ -51,7 +53,9 @@ end
 -- API - registers an effect
 -- required parameters in def:
 -- name - string - effect name in code
+-- description - translated string - actual effect name in game
 -- optional parameters in def:
+-- get_tt - function(factor) - returns tooltip description text for use with potions
 -- icon - string - file name of the effect icon in HUD - defaults to one based on name
 -- res_condition - function(object) - returning true if target is to be resistant to the effect
 -- on_start - function(object, factor) - called when dealing the effect
@@ -70,25 +74,33 @@ end
 -- modifier_priority - integer - priority passed when registering damage_modifier - defaults to -50
 function mcl_potions.register_effect(def)
 	local modname = minetest.get_current_modname()
-	if def.name == nil then
+	local name = def.name
+	if name == nil then
 		error("Unable to register effect: name is nil")
 	end
-	if def.name == "list" then
+	if type(name) ~= "string" then
+		error("Unable to register effect: name is not a string")
+	end
+	if name == "list" then
 		error("Unable to register effect: list is a reserved word")
 	end
-	if def.name == "heal" then
+	if name == "heal" then
 		error("Unable to register effect: heal is a reserved word")
 	end
 	if registered_effects[name] then
 		error("Effect named "..name.." already registered!")
 	end
-	local name = def.name
+	if not def.description or type(def.description) ~= "string" then
+		error("Unable to register effect: description is not a string")
+	end
 	local pdef = {}
+	pdef.description = def.description
 	if not def.icon then
 		pdef.icon = modname.."_effect_"..name..".png"
 	else
 		pdef.icon = def.icon
 	end
+	pdef.get_tt = def.get_tt
 	pdef.res_condition = def.res_condition
 	pdef.on_start = def.on_start
 	pdef.on_load = def.on_load
@@ -134,20 +146,9 @@ function mcl_potions.register_effect(def)
 	EF[name] = {}
 end
 
-function mcl_potions.get_registered_effects()
-	return table.copy(registered_effects)
-end
-
-function mcl_potions.is_effect_registered(name)
-	if registered_effects[name] then
-		return true
-	else
-		return false
-	end
-end
-
 mcl_potions.register_effect({
 	name = "invisibility",
+	description = S("Invisiblity"),
 	on_start = function(object, factor)
 		mcl_potions.make_invisible(object, true)
 	end,
@@ -163,6 +164,7 @@ mcl_potions.register_effect({
 
 mcl_potions.register_effect({
 	name = "poison",
+	description = S("Poison"),
 	res_condition = function(object)
 		local entity = object:get_luaentity()
 		return (entity and (entity.harmed_by_heal or string.find(entity.name, "spider")))
@@ -181,6 +183,7 @@ mcl_potions.register_effect({
 
 mcl_potions.register_effect({
 	name = "regeneration",
+	description = S("Regeneration"),
 	res_condition = function(object)
 		local entity = object:get_luaentity()
 		return (entity and entity.harmed_by_heal)
@@ -202,6 +205,7 @@ mcl_potions.register_effect({
 
 mcl_potions.register_effect({
 	name = "strength",
+	description = S("Strength"),
 	res_condition = function(object)
 		return (not object:is_player())
 	end,
@@ -210,6 +214,7 @@ mcl_potions.register_effect({
 
 mcl_potions.register_effect({
 	name = "weakness",
+	description = S("Weakness"),
 	res_condition = function(object)
 		return (not object:is_player())
 	end,
@@ -218,6 +223,7 @@ mcl_potions.register_effect({
 
 mcl_potions.register_effect({
 	name = "water_breathing",
+	description = S("Water Breathing"),
 	on_step = function(dtime, object, factor, duration)
 		if not object:is_player() then return end
 		if object:get_breath() then
@@ -231,6 +237,7 @@ mcl_potions.register_effect({
 
 mcl_potions.register_effect({
 	name = "leaping",
+	description = S("Leaping"),
 	res_condition = function(object)
 		return (not object:is_player())
 	end,
@@ -248,6 +255,7 @@ mcl_potions.register_effect({
 
 mcl_potions.register_effect({
 	name = "swiftness",
+	description = S("Swiftness"),
 	res_condition = function(object)
 		return (not object:is_player())
 	end,
@@ -265,6 +273,7 @@ mcl_potions.register_effect({
 
 mcl_potions.register_effect({
 	name = "slowness",
+	description = S("Slowness"),
 	res_condition = function(object)
 		return (not object:is_player())
 	end,
@@ -282,6 +291,7 @@ mcl_potions.register_effect({
 
 mcl_potions.register_effect({
 	name = "night_vision",
+	description = S("Night Vision"),
 	res_condition = function(object)
 		return (not object:is_player())
 	end,
@@ -303,6 +313,7 @@ mcl_potions.register_effect({
 
 mcl_potions.register_effect({
 	name = "fire_resistance",
+	description = S("Fire Resistance"),
 	res_condition = function(object)
 		return (not object:is_player())
 	end,
@@ -313,11 +324,13 @@ mcl_potions.register_effect({
 
 mcl_potions.register_effect({
 	name = "bad_omen",
+	description = S("Bad Omen"),
 	particle_color = "#0b6138",
 })
 
 mcl_potions.register_effect({
 	name = "withering",
+	description = S("Withering"),
 	res_condition = function(object)
 		local entity = object:get_luaentity()
 		return (entity and string.find(entity.name, "wither"))
@@ -696,7 +709,7 @@ function mcl_potions.make_invisible(obj_ref, hide)
 end
 
 
-function mcl_potions._use_potion(item, obj, color)
+function mcl_potions._use_potion(obj, color)
 	local d = 0.1
 	local pos = obj:get_pos()
 	minetest.sound_play("mcl_potions_drinking", {pos = pos, max_hear_distance = 6, gain = 1})

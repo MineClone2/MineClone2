@@ -8,14 +8,17 @@ mcl_potions = {}
 -- duration effects of glowstone are a time factor of 1/2
 -- splash potion duration effects are reduced by a factor of 3/4
 
-mcl_potions.II_FACTOR = 2
+mcl_potions.POTENT_FACTOR = 2
 mcl_potions.PLUS_FACTOR = 8/3
+mcl_potions.INV_FACTOR = 0.50
 
 mcl_potions.DURATION = 180
-mcl_potions.DURATION_PLUS = mcl_potions.DURATION * mcl_potions.PLUS_FACTOR
-mcl_potions.DURATION_2 = mcl_potions.DURATION / mcl_potions.II_FACTOR
+mcl_potions.DURATION_INV = mcl_potions.DURATION * mcl_potions.INV_FACTOR
 
-mcl_potions.INV_FACTOR = 0.50
+mcl_potions.II_FACTOR = mcl_potions.POTENT_FACTOR -- TODO remove at some point
+mcl_potions.DURATION_PLUS = mcl_potions.DURATION * mcl_potions.PLUS_FACTOR -- TODO remove at some point
+mcl_potions.DURATION_2 = mcl_potions.DURATION / mcl_potions.II_FACTOR -- TODO remove at some point
+
 mcl_potions.SPLASH_FACTOR = 0.75
 mcl_potions.LINGERING_FACTOR = 0.25
 
