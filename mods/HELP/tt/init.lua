@@ -74,6 +74,22 @@ function tt.reload_itemstack_description(itemstack)
 		local orig_desc = def._tt_original_description or def.description
 		if meta:get_string("name") ~= "" then
 			orig_desc = minetest.colorize(tt.NAME_COLOR, meta:get_string("name"))
+		elseif def.groups._mcl_potion == 1 then
+			local potency = meta:get_int("mcl_potions:potion_potent")
+			local plus = meta:get_int("mcl_potions:potion_plus")
+			if potency > 0 then
+				local sym_potency = mcl_util.to_roman(potency+1)
+				orig_desc = orig_desc.. " ".. sym_potency
+			end
+			if plus > 0 then
+				local sym_plus = " "
+				local i = plus
+				while i>0 do
+					i = i - 1
+					sym_plus = sym_plus.. "+"
+				end
+				orig_desc = orig_desc.. sym_plus
+			end
 		end
 		local desc = apply_snippets(orig_desc, itemstring, toolcaps or def.tool_capabilities, itemstack)
 		meta:set_string("description", desc)
