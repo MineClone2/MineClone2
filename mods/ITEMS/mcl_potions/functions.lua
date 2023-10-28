@@ -490,7 +490,7 @@ function mcl_potions._clear_cached_player_data(player)
 		effect[player] = nil
 	end
 
-	meta = player:get_meta()
+	local meta = player:get_meta()
 	meta:set_int("night_vision", 0)
 end
 
@@ -514,7 +514,7 @@ function mcl_potions._save_player_effects(player)
 	if not player:is_player() then
 		return
 	end
-	meta = player:get_meta()
+	local meta = player:get_meta()
 
 	for name, effect in pairs(registered_effects) do
 		meta:set_string("mcl_potions:_EF_"..name, minetest.serialize(EF[name][player]))
@@ -525,7 +525,7 @@ function mcl_potions._load_player_effects(player)
 	if not player:is_player() then
 		return
 	end
-	meta = player:get_meta()
+	local meta = player:get_meta()
 
 	-- handle legacy meta strings
 	local legacy_invisible = minetest.deserialize(meta:get_string("_is_invisible"))
