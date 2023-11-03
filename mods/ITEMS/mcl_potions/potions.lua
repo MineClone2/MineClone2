@@ -8,7 +8,7 @@ local function potion_image(colorstring, opacity)
 end
 
 local how_to_drink = S("Use the “Place” key to drink it.")
-local potion_intro = S("Drinking a potion gives you a particular effect.")
+local potion_intro = S("Drinking a potion gives you a particular effect or set of effects.")
 
 local function time_string(dur)
 	if not dur then
@@ -166,7 +166,8 @@ end
 -- has_lingering - bool - defaults to true
 -- has_arrow - bool - defaults to false
 -- has_potent - bool - whether there is a potent (e.g. II) variant - defaults to the value of uses_level
--- default_potent_level - int - effect level used for the potent variant - defaults to 2
+-- default_potent_level - int - potion level used for the default potent variant - defaults to 2
+-- default_extend_level - int - extention level (amount of +) used for the default extended variant - defaults to 1
 -- custom_on_use - function(user, level) - called when the potion is drunk
 -- custom_effect - function(object, level) - called when the potion effects are applied
 -- custom_splash_effect - function(pos, level) - called when the splash potion explodes
@@ -225,6 +226,8 @@ function mcl_potions.register_potion(def)
 	pdef.uses_level = uses_level
 	if def.has_potent ~= nil then pdef.has_potent = def.has_potent
 	else pdef.has_potent = uses_level end
+	pdef._default_potent_level = def.default_potent_level or 2
+	pdef._default_extend_level = def.default_extend_level or 1
 	pdef.has_plus = has_plus
 	local on_use
 	if def.drinkable ~= false then
@@ -259,6 +262,8 @@ mcl_potions.register_potion({
 			dur = 10,
 		},
 	},
+	default_potent_level = 5,
+	default_extend_level = 3,
 })
 
 
