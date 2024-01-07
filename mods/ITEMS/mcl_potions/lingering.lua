@@ -86,18 +86,19 @@ minetest.register_globalstep(function(dtime)
 								if vals.potency>0 and details.uses_level then
 									dur = dur / math.pow(mcl_potions.POTENT_FACTOR, vals.potency)
 								end
+								dur = dur * mcl_potions.LINGERING_FACTOR
 							else
 								dur = details.dur
 							end
-							dur = dur * mcl_potions.SPLASH_FACTOR
 							if mcl_potions.give_effect_by_level(name, obj, ef_level, dur) then
 								applied = true
 							end
 						end
 					end
 
-					if vals.def.custom_effect and vals.def.custom_effect(obj, vals.potency+1) then
-						applied = true
+					if vals.def.custom_effect
+						and vals.def.custom_effect(obj, (vals.potency+1) * mcl_potions.LINGERING_FACTOR) then
+							applied = true
 					end
 
 					if applied then vals.timer = vals.timer - 3.25 end
@@ -138,7 +139,7 @@ function mcl_potions.register_lingering(name, descr, color, def)
 		_default_potent_level = def._default_potent_level,
 		_default_extend_level = def._default_extend_level,
 		inventory_image = lingering_image(color),
-		groups = {brewitem=1, bottle=1, _mcl_potion=1},
+		groups = {brewitem=1, bottle=1, ling_potion=1, _mcl_potion=1},
 		on_use = function(item, placer, pointed_thing)
 			local velocity = 10
 			local dir = placer:get_look_dir();

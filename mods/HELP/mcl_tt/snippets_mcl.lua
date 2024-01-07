@@ -124,7 +124,13 @@ tt.register_snippet(function(itemstring, _, itemstack)
 	local meta = itemstack:get_meta()
 	local potency = meta:get_int("mcl_potions:potion_potent")
 	local plus = meta:get_int("mcl_potions:potion_plus")
-	if def._dynamic_tt then s = s.. def._dynamic_tt(potency+1).. "\n" end
+	local sl_factor = 1
+	if def.groups.splash_potion == 1 then
+		sl_factor = mcl_potions.SPLASH_FACTOR
+	elseif def.groups.ling_potion == 1 then
+		sl_factor = mcl_potions.LINGERING_FACTOR
+	end
+	if def._dynamic_tt then s = s.. def._dynamic_tt((potency+1)*sl_factor).. "\n" end
 	local effects = def._effect_list
 	if effects then
 		local effect
@@ -137,7 +143,7 @@ tt.register_snippet(function(itemstring, _, itemstack)
 		for name, details in pairs(effects) do
 			effect = mcl_potions.registered_effects[name]
 			if details.dur_variable then
-				dur = details.dur * math.pow(mcl_potions.PLUS_FACTOR, plus)
+				dur = details.dur * math.pow(mcl_potions.PLUS_FACTOR, plus) * sl_factor
 				if potency > 0 and details.uses_level then
 					dur = dur / math.pow(mcl_potions.POTENT_FACTOR, potency)
 				end

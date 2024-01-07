@@ -34,7 +34,7 @@ function mcl_potions.register_splash(name, descr, color, def)
 		_default_potent_level = def._default_potent_level,
 		_default_extend_level = def._default_extend_level,
 		inventory_image = splash_image(color),
-		groups = {brewitem=1, bottle=1, _mcl_potion=1},
+		groups = {brewitem=1, bottle=1, splash_potion=1, _mcl_potion=1},
 		on_use = function(item, placer, pointed_thing)
 			local velocity = 10
 			local dir = placer:get_look_dir();
@@ -145,10 +145,10 @@ function mcl_potions.register_splash(name, descr, color, def)
 									if potency>0 and details.uses_level then
 										dur = dur / math.pow(mcl_potions.POTENT_FACTOR, potency)
 									end
+									dur = dur * mcl_potions.SPLASH_FACTOR
 								else
 									dur = details.dur
 								end
-								dur = dur * mcl_potions.SPLASH_FACTOR
 								if rad > 0 then
 									mcl_potions.give_effect_by_level(name, obj, ef_level, redux_map[rad]*dur)
 								else
@@ -157,7 +157,14 @@ function mcl_potions.register_splash(name, descr, color, def)
 							end
 						end
 
-						if def.custom_effect then def.custom_effect(obj, potency+1) end -- TODO use redux_map
+						if def.custom_effect then
+							local power = (potency+1) * mcl_potions.SPLASH_FACTOR
+							if rad > 0 then
+								def.custom_effect(obj, redux_map[rad] * power)
+							else
+								def.custom_effect(obj, power)
+							end
+						end
 					end
 				end
 				self.object:remove()
