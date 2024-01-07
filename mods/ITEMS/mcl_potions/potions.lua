@@ -272,6 +272,7 @@ function mcl_potions.register_potion(def)
 		local ling_desc = S("Lingering @1", pdef.description)
 		local ldef = {}
 		ldef._tt = def._tt
+		ldef._dynamic_tt = def._dynamic_tt
 		ldef._longdesc = def._longdesc
 		ldef.stack_max = pdef.stack_max
 		ldef._effect_list = pdef._effect_list
@@ -300,6 +301,7 @@ function mcl_potions.register_potion(def)
 		end
 		local adef = {}
 		adef._tt = def._tt
+		adef._dynamic_tt = def._dynamic_tt
 		adef._longdesc = def._longdesc
 		adef._effect_list = pdef._effect_list
 		adef.uses_level = uses_level
@@ -671,45 +673,29 @@ end
 -- ╚═════╝░╚══════╝╚═╝░░░░░╚═╝╚═╝░░╚══╝╚═╝░░░╚═╝░░░╚═╝░╚════╝░╚═╝░░╚══╝╚═════╝░
 
 
-local awkward_def = {
+mcl_potions.register_potion({
 	name = "awkward",
-	description_potion = S("Awkward Potion"),
-	description_splash = S("Awkward Splash Potion"),
-	description_lingering = S("Awkward Lingering Potion"),
-	no_arrow = true,
-	no_effect = true,
+	desc_prefix = S("Awkward"),
 	_tt = S("No effect"),
 	_longdesc = S("Has an awkward taste and is used for brewing potions."),
 	color = "#0000FF",
-	groups = {brewitem=1, food=3, can_eat_when_full=1, bottle=1},
-	on_use = minetest.item_eat(0, "mcl_potions:glass_bottle"),
-}
+})
 
-local mundane_def = {
+mcl_potions.register_potion({
 	name = "mundane",
-	description_potion = S("Mundane Potion"),
-	description_splash = S("Mundane Splash Potion"),
-	description_lingering = S("Mundane Lingering Potion"),
-	no_arrow = true,
-	no_effect = true,
+	desc_prefix = S("Mundane"),
 	_tt = S("No effect"),
-	_longdesc = S("Has a terrible taste and is not useful for brewing potions."),
+	_longdesc = S("Has a terrible taste and is not really useful for brewing potions."),
 	color = "#0000FF",
-	on_use = minetest.item_eat(0, "mcl_potions:glass_bottle"),
-}
+})
 
-local thick_def = {
+mcl_potions.register_potion({
 	name = "thick",
-	description_potion = S("Thick Potion"),
-	description_splash = S("Thick Splash Potion"),
-	description_lingering = S("Thick Lingering Potion"),
-	no_arrow = true,
-	no_effect = true,
+	desc_prefix = S("Thick"),
 	_tt = S("No effect"),
-	_longdesc = S("Has a bitter taste and is not useful for brewing potions."),
+	_longdesc = S("Has a bitter taste and is not really useful for brewing potions."),
 	color = "#0000FF",
-	on_use = minetest.item_eat(0, "mcl_potions:glass_bottle"),
-}
+})
 
 local dragon_breath_def = {
 	name = "dragon_breath",
@@ -738,146 +724,155 @@ local healing_def = {
 	is_II = true,
 }
 
+mcl_potions.register_potion({
+	name = "healing",
+	desc_suffix = S("of Healing"),
+	_dynamic_tt = function(level)
+		return S("+@1 HP", 4 * level)
+	end,
+	_longdesc = S("Instantly heals."),
+	color = "#F82423",
+	uses_level = true,
+	has_arrow = true,
+	custom_effect = function(object, level)
+		return mcl_potions.healing_func(object, 4 * level)
+	end,
+})
 
-local harming_def = {
+mcl_potions.register_potion({
 	name = "harming",
-	description = S("Harming"),
-	_tt = S("-6 HP"),
-	_tt_II = S("-12 HP"),
+	desc_suffix = S("of Harming"),
+	_dynamic_tt = function(level)
+		return S("-@1 HP", 6 * level)
+	end,
 	_longdesc = S("Instantly deals damage."),
 	color = "#430A09",
-	effect = -6,
-	instant = true,
-	on_use = mcl_potions.healing_func,
-	is_II = true,
-	is_inv = true,
-}
+	uses_level = true,
+	has_arrow = true,
+	custom_effect = function(object, level)
+		return mcl_potions.healing_func(object, -6 * level)
+	end,
+})
 
-local night_vision_def = {
+mcl_potions.register_potion({
 	name = "night_vision",
-	description = S("Night Vision"),
+	desc_suffix = S("of Night Vision"),
 	_tt = nil,
 	_longdesc = S("Increases the perceived brightness of light under a dark sky."),
 	color = "#1F1FA1",
-	effect = nil,
-	is_dur = true,
-	on_use = mcl_potions.night_vision_func,
-	is_plus = true,
-}
+	_effect_list = {
+		night_vision = {},
+	},
+	has_arrow = true,
+})
 
-local swiftness_def = {
+mcl_potions.register_potion({
 	name = "swiftness",
-	description = S("Swiftness"),
+	desc_suffix = S("of Swiftness"),
 	_tt = nil,
 	_longdesc = S("Increases walking speed."),
 	color = "#7CAFC6",
-	effect = 1.2,
-	is_dur = true,
-	on_use = mcl_potions.swiftness_func,
-	is_II = true,
-	is_plus = true,
-}
+	_effect_list = {
+		swiftness = {},
+	},
+	has_arrow = true,
+})
 
-local slowness_def = {
+mcl_potions.register_potion({
 	name = "slowness",
-	description = S("Slowness"),
+	desc_suffix = S("of Slowness"),
 	_tt = nil,
 	_longdesc = S("Decreases walking speed."),
 	color = "#5A6C81",
-	effect = 0.85,
-	is_dur = true,
-	on_use = mcl_potions.slowness_func,
-	is_II = true,
-	is_plus = true,
-	is_inv = true,
-}
+	_effect_list = {
+		slowness = {dur=mcl_potions.DURATION_INV},
+	},
+	has_arrow = true,
+})
 
-local leaping_def = {
+mcl_potions.register_potion({
 	name = "leaping",
-	description = S("Leaping"),
+	desc_suffix = S("of Leaping"),
 	_tt = nil,
 	_longdesc = S("Increases jump strength."),
 	color = "#22FF4C",
-	effect = 1.15,
-	is_dur = true,
-	on_use = mcl_potions.leaping_func,
-	is_II = true,
-	is_plus = true,
-}
+	_effect_list = {
+		leaping = {},
+	},
+	has_arrow = true,
+})
 
-local withering_def = {
+mcl_potions.register_potion({
 	name = "withering",
-	description = S("Withering"),
+	desc_suffix = S("of Withering"),
 	_tt = nil,
 	_longdesc = S("Applies the withering effect which deals damage at a regular interval and can kill."),
 	color = "#000000",
-	effect = 4,
-	is_dur = true,
-	on_use = mcl_potions.withering_func,
-	is_II = true,
-	is_plus = true,
-	is_inv = true,
-}
+	_effect_list = {
+		withering = {dur=mcl_potions.DURATION_POISON},
+	},
+	has_arrow = true,
+})
 
-local poison_def = {
+mcl_potions.register_potion({
 	name = "poison",
-	description = S("Poison"),
+	desc_suffix = S("of Poison"),
 	_tt = nil,
 	_longdesc = S("Applies the poison effect which deals damage at a regular interval."),
 	color = "#4E9331",
-	effect = 2.5,
-	is_dur = true,
-	on_use = mcl_potions.poison_func,
-	is_II = true,
-	is_plus = true,
-	is_inv = true,
-}
+	_effect_list = {
+		poison = {dur=mcl_potions.DURATION_POISON},
+	},
+	has_arrow = true,
+})
 
-local regeneration_def = {
+mcl_potions.register_potion({
 	name = "regeneration",
-	description = S("Regeneration"),
+	desc_suffix = S("of Regeneration"),
 	_tt = nil,
 	_longdesc = S("Regenerates health over time."),
 	color = "#CD5CAB",
-	effect = 2.5,
-	is_dur = true,
-	on_use = mcl_potions.regeneration_func,
-	is_II = true,
-	is_plus = true,
-}
+	_effect_list = {
+		regeneration = {dur=mcl_potions.DURATION_POISON},
+	},
+	has_arrow = true,
+})
 
-local invisibility_def = {
+mcl_potions.register_potion({
 	name = "invisibility",
-	description = S("Invisibility"),
+	desc_suffix = S("of Invisibility"),
 	_tt = nil,
 	_longdesc = S("Grants invisibility."),
 	color = "#7F8392",
-	is_dur = true,
-	on_use = mcl_potions.invisiblility_func,
-	is_plus = true,
-}
+	_effect_list = {
+		invisibility = {},
+	},
+	has_arrow = true,
+})
 
-local water_breathing_def = {
+mcl_potions.register_potion({
 	name = "water_breathing",
-	description = S("Water Breathing"),
+	desc_suffix = S("of Water Breathing"),
 	_tt = nil,
 	_longdesc = S("Grants limitless breath underwater."),
 	color = "#2E5299",
-	is_dur = true,
-	on_use = mcl_potions.water_breathing_func,
-	is_plus = true,
-}
+	_effect_list = {
+		water_breathing = {},
+	},
+	has_arrow = true,
+})
 
-local fire_resistance_def = {
+mcl_potions.register_potion({
 	name = "fire_resistance",
-	description = S("Fire Resistance"),
+	desc_suffix = S("of Fire Resistance"),
 	_tt = nil,
 	_longdesc = S("Grants immunity to damage from heat sources like fire."),
 	color = "#E49A3A",
-	is_dur = true,
-	on_use = mcl_potions.fire_resistance_func,
-	is_plus = true,
-}
+	_effect_list = {
+		fire_resistance = {},
+	},
+	has_arrow = true,
+})
 
 
 
