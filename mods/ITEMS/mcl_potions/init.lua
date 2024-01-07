@@ -14,6 +14,7 @@ mcl_potions.INV_FACTOR = 0.50
 
 mcl_potions.DURATION = 180
 mcl_potions.DURATION_INV = mcl_potions.DURATION * mcl_potions.INV_FACTOR
+mcl_potions.DURATION_POISON = 45
 
 mcl_potions.II_FACTOR = mcl_potions.POTENT_FACTOR -- TODO remove at some point
 mcl_potions.DURATION_PLUS = mcl_potions.DURATION * mcl_potions.PLUS_FACTOR -- TODO remove at some point
