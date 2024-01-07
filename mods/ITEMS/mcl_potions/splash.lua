@@ -13,20 +13,28 @@ end
 
 function mcl_potions.register_splash(name, descr, color, def)
 	local id = "mcl_potions:"..name.."_splash"
-	local longdesc = def.longdesc
+	local longdesc = def._longdesc
 	if not def.no_effect then
-		longdesc = S("A throwable potion that will shatter on impact, where it gives all nearby players and mobs a status effect.")
-		if def.longdesc then
-			longdesc = longdesc .. "\n" .. def.longdesc
+		longdesc = S("A throwable potion that will shatter on impact, where it gives all nearby players and mobs a status effect or a set of status effects.")
+		if def._longdesc then
+			longdesc = longdesc .. "\n" .. def._longdesc
 		end
 	end
 	minetest.register_craftitem(id, {
 		description = descr,
-		_tt_help = def.tt,
+		_tt_help = def._tt,
+		_dynamic_tt = def._dynamic_tt,
 		_doc_items_longdesc = longdesc,
 		_doc_items_usagehelp = S("Use the “Punch” key to throw it."),
+		stack_max = def.stack_max,
+		_effect_list = def._effect_list,
+		uses_level = def.uses_level,
+		has_potent = def.has_potent,
+		has_plus = def.has_plus,
+		_default_potent_level = def._default_potent_level,
+		_default_extend_level = def._default_extend_level,
 		inventory_image = splash_image(color),
-		groups = {brewitem=1, not_in_creative_inventory=0, bottle=1},
+		groups = {brewitem=1, bottle=1, _mcl_potion=1},
 		on_use = function(item, placer, pointed_thing)
 			local velocity = 10
 			local dir = placer:get_look_dir();
@@ -35,7 +43,11 @@ function mcl_potions.register_splash(name, descr, color, def)
 			local obj = minetest.add_entity({x=pos.x+dir.x,y=pos.y+2+dir.y,z=pos.z+dir.z}, id.."_flying")
 			obj:set_velocity({x=dir.x*velocity,y=dir.y*velocity,z=dir.z*velocity})
 			obj:set_acceleration({x=dir.x*-3, y=-9.8, z=dir.z*-3})
-			obj:get_luaentity()._thrower = placer:get_player_name()
+			local ent = obj:get_luaentity()
+			ent._thrower = placer:get_player_name()
+			ent._potency = item:get_meta():get_int("mcl_potions:potion_potent")
+			ent._plus = item:get_meta():get_int("mcl_potions:potion_plus")
+			ent._effect_list = def._effect_list
 			if not minetest.is_creative_enabled(placer:get_player_name()) then
 				item:take_item()
 			end
@@ -50,6 +62,10 @@ function mcl_potions.register_splash(name, descr, color, def)
 			local velocity = 22
 			obj:set_velocity({x=dropdir.x*velocity,y=dropdir.y*velocity,z=dropdir.z*velocity})
 			obj:set_acceleration({x=dropdir.x*-3, y=-9.8, z=dropdir.z*-3})
+			local ent = obj:get_luaentity()
+			ent._potency = item:get_meta():get_int("mcl_potions:potion_potent")
+			ent._plus = item:get_meta():get_int("mcl_potions:potion_plus")
+			ent._effect_list = def._effect_list
 		end
 	})
 
@@ -103,10 +119,10 @@ function mcl_potions.register_splash(name, descr, color, def)
 					texture = texture.."^[colorize:"..color..":127"
 				})
 
-				if name == "water" then
-					mcl_potions._extinguish_nearby_fire(pos)
-				end
-				self.object:remove()
+				local potency = self._potency or 0
+				local plus = self._plus or 0
+
+				if def.on_splash then def.on_splash(pos, potency+1) end
 				for _,obj in pairs(minetest.get_objects_inside_radius(pos, 4)) do
 
 					local entity = obj:get_luaentity()
@@ -114,13 +130,37 @@ function mcl_potions.register_splash(name, descr, color, def)
 
 						local pos2 = obj:get_pos()
 						local rad = math.floor(math.sqrt((pos2.x-pos.x)^2 + (pos2.y-pos.y)^2 + (pos2.z-pos.z)^2))
-						if rad > 0 then
-							def.potion_fun(obj, redux_map[rad])
-						else
-							def.potion_fun(obj, 1)
+
+						if def._effect_list then
+							local ef_level
+							local dur
+							for name, details in pairs(def._effect_list) do
+								if details.uses_level then
+									ef_level = details.level + details.level_scaling * (potency)
+								else
+									ef_level = details.level
+								end
+								if details.dur_variable then
+									dur = details.dur * math.pow(mcl_potions.PLUS_FACTOR, plus)
+									if potency>0 and details.uses_level then
+										dur = dur / math.pow(mcl_potions.POTENT_FACTOR, potency)
+									end
+								else
+									dur = details.dur
+								end
+								dur = dur * mcl_potions.SPLASH_FACTOR
+								if rad > 0 then
+									mcl_potions.give_effect_by_level(name, obj, ef_level, redux_map[rad]*dur)
+								else
+									mcl_potions.give_effect_by_level(name, obj, ef_level, dur)
+								end
+							end
 						end
+
+						if def.custom_effect then def.custom_effect(obj, potency+1) end -- TODO use redux_map
 					end
 				end
+				self.object:remove()
 
 			end
 		end,

@@ -37,16 +37,23 @@ local arrow_tt = minetest.registered_items["mcl_bows:arrow"]._tt_help or ""
 
 function mcl_potions.register_arrow(name, desc, color, def)
 
-	local longdesc = def.longdesc or ""
+	local longdesc = def._longdesc or ""
+	local tt = def._tt or ""
 	minetest.register_craftitem("mcl_potions:"..name.."_arrow", {
 		description = desc,
-		_tt_help = arrow_tt .. "\n" .. def.tt,
+		_tt_help = arrow_tt .. "\n" .. tt,
 		_doc_items_longdesc = arrow_longdesc .. "\n" ..
 			S("This particular arrow is tipped and will give an effect when it hits a player or mob.") .. "\n" ..
 			longdesc,
 		_doc_items_usagehelp = how_to_shoot,
+		_effect_list = def._effect_list,
+		uses_level = def.uses_level,
+		has_potent = def.has_potent,
+		has_plus = def.has_plus,
+		_default_potent_level = def._default_potent_level,
+		_default_extend_level = def._default_extend_level,
 		inventory_image = "mcl_bows_arrow_inv.png^(mcl_potions_arrow_inv.png^[colorize:"..color..":100)",
-		groups = { ammo=1, ammo_bow=1, brewitem=1},
+		groups = { ammo=1, ammo_bow=1, brewitem=1, _mcl_potion=1},
 		_on_dispense = function(itemstack, dispenserpos, droppos, dropnode, dropdir)
 			-- Shoot arrow
 			local shootpos = vector.add(dispenserpos, vector.multiply(dropdir, 0.51))
@@ -264,6 +271,9 @@ function mcl_potions.register_arrow(name, desc, color, def)
 							end
 						end
 
+						local potency = self._potency or 0
+						local plus = self._plus or 0
+
 						-- Punch target object but avoid hurting enderman.
 						if lua then
 							if lua.name ~= "mobs_mc:enderman" then
@@ -271,14 +281,59 @@ function mcl_potions.register_arrow(name, desc, color, def)
 									full_punch_interval=1.0,
 									damage_groups={fleshy=self._damage},
 								}, nil)
-								def.potion_fun(obj)
+								if def._effect_list then
+									local ef_level
+									local dur
+									for name, details in pairs(def._effect_list) do
+										if details.uses_level then
+											ef_level = details.level + details.level_scaling * (potency)
+										else
+											ef_level = details.level
+										end
+										if details.dur_variable then
+											dur = details.dur * math.pow(mcl_potions.PLUS_FACTOR, plus)
+											if potency>0 and details.uses_level then
+												dur = dur / math.pow(mcl_potions.POTENT_FACTOR, potency)
+											end
+										else
+											dur = details.dur
+										end
+										mcl_potions.give_effect_by_level(name, obj, ef_level, dur)
+									end
+								end
+								if def.custom_effect then def.custom_effect(obj, potency+1) end
 							end
 						else
 							obj:punch(self.object, 1.0, {
 								full_punch_interval=1.0,
 								damage_groups={fleshy=self._damage},
 							}, nil)
-							def.potion_fun(obj)
+							if def._effect_list then
+								local ef_level
+								local dur
+								for name, details in pairs(def._effect_list) do
+									if details.uses_level then
+										ef_level = details.level + details.level_scaling * (potency)
+									else
+										ef_level = details.level
+									end
+									if details.dur_variable then
+										dur = details.dur * math.pow(mcl_potions.PLUS_FACTOR, plus)
+										if potency>0 and details.uses_level then
+											dur = dur / math.pow(mcl_potions.POTENT_FACTOR, potency)
+										end
+									else
+										dur = details.dur
+									end
+									dur = dur * mcl_potions.SPLASH_FACTOR
+									if rad > 0 then
+										mcl_potions.give_effect_by_level(name, obj, ef_level, redux_map[rad]*dur)
+									else
+										mcl_potions.give_effect_by_level(name, obj, ef_level, dur)
+									end
+								end
+							end
+							if def.custom_effect then def.custom_effect(obj, potency+1) end
 						end
 
 						if is_player then

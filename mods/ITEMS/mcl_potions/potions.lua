@@ -145,7 +145,7 @@ end
 -- stack_max - int - max stack size - defaults to 1
 -- image - string - name of a custom texture of the potion icon
 -- color - string - colorstring for potion icon when image is not defined - defaults to #0000FF
--- groups - table - item groups definition -
+-- groups - table - item groups definition for the regular potion, not splash or lingering -
 --   - must contain _mcl_potion=1 for tooltip to include dynamic_tt and effects
 --   - defaults to {brewitem=1, food=3, can_eat_when_full=1, _mcl_potion=1}
 -- _effect_list - table - all the effects dealt by the potion in the format of tables
@@ -168,10 +168,10 @@ end
 -- has_potent - bool - whether there is a potent (e.g. II) variant - defaults to the value of uses_level
 -- default_potent_level - int - potion level used for the default potent variant - defaults to 2
 -- default_extend_level - int - extention level (amount of +) used for the default extended variant - defaults to 1
--- custom_on_use - function(user, level) - called when the potion is drunk
--- custom_effect - function(object, level) - called when the potion effects are applied
--- custom_splash_effect - function(pos, level) - called when the splash potion explodes
--- custom_linger_effect - function(pos, radius, level) - called on the lingering potion step
+-- custom_on_use - function(user, level) - called when the potion is drunk, returns true on success
+-- custom_effect - function(object, level) - called when the potion effects are applied, returns true on success
+-- custom_splash_effect - function(pos, level) - called when the splash potion explodes, returns true on success
+-- custom_linger_effect - function(pos, radius, level) - called on the lingering potion step, returns true on success
 function mcl_potions.register_potion(def)
 	local modname = minetest.get_current_modname()
 	local name = def.name
@@ -201,25 +201,28 @@ function mcl_potions.register_potion(def)
 	local effect
 	local uses_level = false
 	local has_plus = false
-	for name, details in pairs(def._effect_list) do
-		effect = mcl_potions.registered_effects[name]
-		if effect then
-			local ulvl
-			if details.uses_level ~= nil then ulvl = details.uses_level
-			else ulvl = effect.uses_factor end
-			if ulvl then uses_level = true end
-			local durvar = true
-			if details.dur_variable ~= nil then durvar = details.dur_variable end
-			if durvar then has_plus = true end
-			pdef._effect_list[name] = {
-				uses_level = ulvl,
-				level = details.level or 1,
-				level_scaling = details.level_scaling or 1,
-				dur = details.dur or mcl_potions.DURATION,
-				dur_variable = durvar,
-			}
-		else
-			error("Unable to register potion: effect not registered")
+	if def._effect_list then
+		for name, details in pairs(def._effect_list) do
+			no_effects = false
+			effect = mcl_potions.registered_effects[name]
+			if effect then
+				local ulvl
+				if details.uses_level ~= nil then ulvl = details.uses_level
+				else ulvl = effect.uses_factor end
+				if ulvl then uses_level = true end
+				local durvar = true
+				if details.dur_variable ~= nil then durvar = details.dur_variable end
+				if durvar then has_plus = true end
+				pdef._effect_list[name] = {
+					uses_level = ulvl,
+					level = details.level or 1,
+					level_scaling = details.level_scaling or 1,
+					dur = details.dur or mcl_potions.DURATION,
+					dur_variable = durvar,
+				}
+			else
+				error("Unable to register potion: effect not registered")
+			end
 		end
 	end
 	if def.uses_level ~= nil then uses_level = def.uses_level end
@@ -238,6 +241,59 @@ function mcl_potions.register_potion(def)
 
 	minetest.register_craftitem(modname..":"..name, pdef)
 
+	if def.has_splash or def.has_splash == nil then
+		local splash_desc = S("Splash @1 Potion @2", def.desc_prefix, def.desc_suffix)
+		local sdef = {}
+		sdef._tt = def._tt
+		sdef._dynamic_tt = def._dynamic_tt
+		sdef._longdesc = def._longdesc
+		sdef.stack_max = pdef.stack_max
+		sdef._effect_list = pdef._effect_list
+		sdef.uses_level = uses_level
+		sdef.has_potent = pdef.has_potent
+		sdef.has_plus = has_plus
+		sdef._default_potent_level = pdef._default_potent_level
+		sdef._default_extend_level = pdef._default_extend_level
+		sdef.custom_effect = def.custom_effect
+		sdef.on_splash = def.custom_splash_effect
+		if not def._effect_list then sdef.instant = true end
+		mcl_potions.register_splash(name, splash_desc, color, sdef)
+	end
+
+	if def.has_lingering or def.has_lingering == nil then
+		local ling_desc = S("Lingering @1 Potion @2", def.desc_prefix, def.desc_suffix)
+		local ldef = {}
+		ldef._tt = def._tt
+		ldef._longdesc = def._longdesc
+		ldef.stack_max = pdef.stack_max
+		ldef._effect_list = pdef._effect_list
+		ldef.uses_level = uses_level
+		ldef.has_potent = pdef.has_potent
+		ldef.has_plus = has_plus
+		ldef._default_potent_level = pdef._default_potent_level
+		ldef._default_extend_level = pdef._default_extend_level
+		ldef.custom_effect = def.custom_effect
+		ldef.on_splash = def.custom_splash_effect
+		ldef.while_lingering = def.custom_linger_effect
+		if not def._effect_list then ldef.instant = true end
+		mcl_potions.register_lingering(name, ling_desc, color, ldef)
+	end
+
+	if def.has_arrow then
+		local arr_desc = S("@1 Arrow @2", def.desc_prefix, def.desc_suffix)
+		local adef = {}
+		adef._tt = def._tt
+		adef._longdesc = def._longdesc
+		adef._effect_list = pdef._effect_list
+		adef.uses_level = uses_level
+		adef.has_potent = pdef.has_potent
+		adef.has_plus = has_plus
+		adef._default_potent_level = pdef._default_potent_level
+		adef._default_extend_level = pdef._default_extend_level
+		adef.custom_effect = def.custom_effect
+		if not def._effect_list then adef.instant = true end
+		mcl_potions.register_arrow(name, arr_desc, color, adef)
+	end
 end
 
 mcl_potions.register_potion({
@@ -264,6 +320,8 @@ mcl_potions.register_potion({
 	},
 	default_potent_level = 5,
 	default_extend_level = 3,
+	custom_splash_effect = mcl_potions._extinguish_nearby_fire,
+	has_arrow = true,
 })
 
 
@@ -811,9 +869,9 @@ local defs = { awkward_def, mundane_def, thick_def, dragon_breath_def,
 	slowness_def, leaping_def, withering_def, poison_def, regeneration_def,
 	invisibility_def, water_breathing_def, fire_resistance_def}
 
-for _, def in ipairs(defs) do
-	register_potion(def)
-end
+-- for _, def in ipairs(defs) do
+-- 	register_potion(def)
+-- end
 
 
 
