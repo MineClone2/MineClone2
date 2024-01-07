@@ -182,7 +182,15 @@ function mcl_potions.register_potion(def)
 		error("Unable to register potion: name is not a string")
 	end
 	local pdef = {}
-	pdef.description = S("@1 Potion @2", def.desc_prefix, def.desc_suffix)
+	if def.desc_prefix and def.desc_suffix then
+		pdef.description = S("@1 Potion @2", def.desc_prefix, def.desc_suffix)
+	elseif def.desc_prefix then
+		pdef.description = S("@1 Potion", def.desc_prefix)
+	elseif def.desc_suffix then
+		pdef.description = S("Potion @1", def.desc_suffix)
+	else
+		pdef.description = S("Strange Potion")
+	end
 	pdef._tt_help = def._tt
 	pdef._dynamic_tt = def._dynamic_tt
 	local potion_longdesc = def._longdesc
@@ -242,7 +250,7 @@ function mcl_potions.register_potion(def)
 	minetest.register_craftitem(modname..":"..name, pdef)
 
 	if def.has_splash or def.has_splash == nil then
-		local splash_desc = S("Splash @1 Potion @2", def.desc_prefix, def.desc_suffix)
+		local splash_desc = S("Splash @1", pdef.description)
 		local sdef = {}
 		sdef._tt = def._tt
 		sdef._dynamic_tt = def._dynamic_tt
@@ -261,7 +269,7 @@ function mcl_potions.register_potion(def)
 	end
 
 	if def.has_lingering or def.has_lingering == nil then
-		local ling_desc = S("Lingering @1 Potion @2", def.desc_prefix, def.desc_suffix)
+		local ling_desc = S("Lingering @1", pdef.description)
 		local ldef = {}
 		ldef._tt = def._tt
 		ldef._longdesc = def._longdesc
@@ -280,7 +288,16 @@ function mcl_potions.register_potion(def)
 	end
 
 	if def.has_arrow then
-		local arr_desc = S("@1 Arrow @2", def.desc_prefix, def.desc_suffix)
+		local arr_desc
+		if def.desc_prefix and def.desc_suffix then
+			arr_desc = S("@1 Arrow @2", def.desc_prefix, def.desc_suffix)
+		elseif def.desc_prefix then
+			arr_desc = S("@1 Arrow", def.desc_prefix)
+		elseif def.desc_suffix then
+			arr_desc = S("Arrow @1", def.desc_suffix)
+		else
+			arr_desc = S("Strange Tipped Arrow")
+		end
 		local adef = {}
 		adef._tt = def._tt
 		adef._longdesc = def._longdesc
