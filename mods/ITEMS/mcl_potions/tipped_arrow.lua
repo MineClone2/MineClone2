@@ -39,6 +39,8 @@ function mcl_potions.register_arrow(name, desc, color, def)
 
 	local longdesc = def._longdesc or ""
 	local tt = def._tt or ""
+	local groups = {ammo=1, ammo_bow=1, brewitem=1, _mcl_potion=1}
+	if def.nocreative then groups.not_in_creative_inventory = 1 end
 	minetest.register_craftitem("mcl_potions:"..name.."_arrow", {
 		description = desc,
 		_tt_help = arrow_tt .. "\n" .. tt,
@@ -54,7 +56,7 @@ function mcl_potions.register_arrow(name, desc, color, def)
 		_default_potent_level = def._default_potent_level,
 		_default_extend_level = def._default_extend_level,
 		inventory_image = "mcl_bows_arrow_inv.png^(mcl_potions_arrow_inv.png^[colorize:"..color..":100)",
-		groups = { ammo=1, ammo_bow=1, brewitem=1, _mcl_potion=1},
+		groups = groups,
 		_on_dispense = function(itemstack, dispenserpos, droppos, dropnode, dropdir)
 			-- Shoot arrow
 			local shootpos = vector.add(dispenserpos, vector.multiply(dropdir, 0.51))

@@ -148,6 +148,7 @@ end
 -- groups - table - item groups definition for the regular potion, not splash or lingering -
 --   - must contain _mcl_potion=1 for tooltip to include dynamic_tt and effects
 --   - defaults to {brewitem=1, food=3, can_eat_when_full=1, _mcl_potion=1}
+-- nocreative - bool - adds a not_in_creative_inventory=1 group - defaults to false
 -- _effect_list - table - all the effects dealt by the potion in the format of tables
 -- -- the name of each sub-table should be a name of a registered effect, and fields can be the following:
 -- -- -- uses_level - bool - whether the level of the potion affects the level of the effect -
@@ -204,6 +205,7 @@ function mcl_potions.register_potion(def)
 	pdef.inventory_image = def.image or potion_image(color)
 	pdef.wield_image = pdef.inventory_image
 	pdef.groups = def.groups or {brewitem=1, food=3, can_eat_when_full=1, _mcl_potion=1}
+	if def.nocreative then pdef.groups.not_in_creative_inventory = 1 end
 
 	pdef._effect_list = {}
 	local effect
@@ -255,6 +257,7 @@ function mcl_potions.register_potion(def)
 		sdef._tt = def._tt
 		sdef._dynamic_tt = def._dynamic_tt
 		sdef._longdesc = def._longdesc
+		sdef.nocreative = def.nocreative
 		sdef.stack_max = pdef.stack_max
 		sdef._effect_list = pdef._effect_list
 		sdef.uses_level = uses_level
@@ -274,6 +277,7 @@ function mcl_potions.register_potion(def)
 		ldef._tt = def._tt
 		ldef._dynamic_tt = def._dynamic_tt
 		ldef._longdesc = def._longdesc
+		ldef.nocreative = def.nocreative
 		ldef.stack_max = pdef.stack_max
 		ldef._effect_list = pdef._effect_list
 		ldef.uses_level = uses_level
@@ -303,6 +307,7 @@ function mcl_potions.register_potion(def)
 		adef._tt = def._tt
 		adef._dynamic_tt = def._dynamic_tt
 		adef._longdesc = def._longdesc
+		adef.nocreative = def.nocreative
 		adef._effect_list = pdef._effect_list
 		adef.uses_level = uses_level
 		adef.has_potent = pdef.has_potent
@@ -326,6 +331,7 @@ mcl_potions.register_potion({
 	_longdesc = "Trolololololo",
 	stack_max = 2,
 	color = "#00AA00",
+	nocreative = true,
 	_effect_list = {
 		night_vision = {},
 		strength = {},
@@ -344,319 +350,6 @@ mcl_potions.register_potion({
 })
 
 
-local function register_potion(def)
-
-	local dur = mcl_potions.DURATION
-
-	if def.is_inv then
-		dur = dur * mcl_potions.INV_FACTOR
-	end
-	if def.name == "poison" or def.name == "regeneration" or def.name == "withering" then
-		dur = 45
-	end
-
-	local on_use = nil
-
-	if def.on_use then
-		on_use = return_on_use(def, def.effect, dur)
-	end
-
-	local function get_tt(tt, effect, dur)
-		local _tt
-		if effect and def.is_dur then
-			_tt = perc_string(effect).." | "..time_string(dur)
-			if def.name == "poison" or def.name == "regeneration" or def.name == "withering" then
-				_tt = S("1 HP/@1s | @2", effect, time_string(dur))
-			end
-		elseif def.name == "healing" or def.name == "harming" then
-				_tt = S("@1 HP", effect)
-		else
-			_tt = tt or time_string(dur) or S("No effect")
-		end
-		return _tt
-	end
-
-	local function get_splash_fun(effect, sp_dur)
-		if def.is_dur then
-			return function(player, redx) def.on_use(player, effect, sp_dur*redx) end
-		elseif def.effect then
-			return function(player, redx) def.on_use(player, effect*redx, sp_dur) end
-		end
-		-- covers case of no effect (water, awkward, mundane)
-		return function() end
-	end
-
-	local function get_lingering_fun(effect, ling_dur)
-		if def.is_dur then
-			return function(player) def.on_use(player, effect, ling_dur) end
-		elseif def.effect then
-			return function(player) def.on_use(player, effect*0.5, ling_dur) end
-		end
-		-- covers case of no effect (water, awkward, mundane)
-		return function() end
-	end
-
-	local function get_arrow_fun(effect, dur)
-		if def.is_dur then
-			return function(player) def.on_use(player, effect, dur) end
-		elseif def.effect then
-			return function(player) def.on_use(player, effect, dur) end
-		end
-		-- covers case of no effect (water, awkward, mundane)
-		return function() end
-	end
-
-	local desc
-	if not def.no_potion then
-		if def.description_potion then
-			desc = def.description_potion
-		else
-			desc = S("@1 Potion", def.description)
-		end
-	else
-		desc = def.description
-	end
-	local potion_longdesc = def._longdesc
-	if not def.no_effect then
-		potion_longdesc = potion_intro .. "\n" .. def._longdesc
-	end
-	local potion_usagehelp
-	local basic_potion_tt
-	if def.name ~= "dragon_breath" then
-		potion_usagehelp = how_to_drink
-		basic_potion_tt = get_tt(def._tt, def.effect, dur)
-	end
-
-	minetest.register_craftitem("mcl_potions:"..def.name, {
-		description = desc,
-		_tt_help = basic_potion_tt,
-		_doc_items_longdesc = potion_longdesc,
-		_doc_items_usagehelp = potion_usagehelp,
-		stack_max = def.stack_max or 1,
-		inventory_image = def.image or potion_image(def.color),
-		wield_image = def.image or potion_image(def.color),
-		groups = def.groups or {brewitem=1, food=3, can_eat_when_full=1, bottle=1},
-		on_place = on_use,
-		on_secondary_use = on_use,
-	})
-
-	-- Register Splash and Lingering
-	local splash_dur = dur * mcl_potions.SPLASH_FACTOR
-	local ling_dur = dur * mcl_potions.LINGERING_FACTOR
-
-	local splash_def = {
-		tt = get_tt(def._tt, def.effect, splash_dur),
-		longdesc = def._longdesc,
-		potion_fun = get_splash_fun(def.effect, splash_dur),
-		no_effect = def.no_effect,
-		instant = def.instant,
-	}
-
-	local ling_def
-	if def.name == "healing" or def.name == "harming" then
-		ling_def = {
-			tt = get_tt(def._tt, def.effect*mcl_potions.LINGERING_FACTOR, ling_dur),
-			longdesc = def._longdesc,
-			potion_fun = get_lingering_fun(def.effect*mcl_potions.LINGERING_FACTOR, ling_dur),
-			no_effect = def.no_effect,
-			instant = def.instant,
-		}
-	else
-		ling_def = {
-			tt = get_tt(def._tt, def.effect, ling_dur),
-			longdesc = def._longdesc,
-			potion_fun = get_lingering_fun(def.effect, ling_dur),
-			no_effect = def.no_effect,
-			instant = def.instant,
-		}
-	end
-
-	local arrow_def = {
-		tt = get_tt(def._tt, def.effect, dur/8.),
-		longdesc = def._longdesc,
-		potion_fun = get_arrow_fun(def.effect, dur/8.),
-		no_effect = def.no_effect,
-		instant = def.instant,
-	}
-
-	if def.color and not def.no_throwable then
-		local desc
-		if def.description_splash then
-			desc = def.description_splash
-		else
-			desc = S("Splash @1 Potion", def.description)
-		end
-		mcl_potions.register_splash(def.name, desc, def.color, splash_def)
-		if def.description_lingering then
-			desc = def.description_lingering
-		else
-			desc = S("Lingering @1 Potion", def.description)
-		end
-		mcl_potions.register_lingering(def.name, desc, def.color, ling_def)
-		if not def.no_arrow then
-			mcl_potions.register_arrow(def.name, S("Arrow of @1", def.description), def.color, arrow_def)
-		end
-	end
-
-	if def.is_II then
-
-		local desc_mod = S(" II")
-
-		local effect_II
-		if def.name == "healing" or def.name == "harming" then
-			effect_II = def.effect*mcl_potions.II_FACTOR
-		elseif def.name == "poison" or def.name == "regeneration" then
-			effect_II = 1.2
-		elseif def.name == "withering" then
-			effect_II = 2
-		else
-			effect_II = def.effect^mcl_potions.II_FACTOR
-		end
-
-		local dur_2 = dur / mcl_potions.II_FACTOR
-		if def.name == "poison" then dur_2 = dur_2 - 1 end
-
-		if def.name == "slowness" then
-			dur_2 = 20
-			effect_II = 0.40
-			desc_mod = S(" IV")
-		end
-
-		on_use = return_on_use(def, effect_II, dur_2)
-
-		minetest.register_craftitem("mcl_potions:"..def.name.."_2", {
-			description = S("@1 Potion@2", def.description, desc_mod),
-			_tt_help = get_tt(def._tt_2, effect_II, dur_2),
-			_doc_items_longdesc = potion_longdesc,
-			_doc_items_usagehelp = potion_usagehelp,
-			stack_max = def.stack_max or 1,
-			inventory_image = def.image or potion_image(def.color),
-			wield_image = def.image or potion_image(def.color),
-			groups = def.groups or {brewitem=1, food=3, can_eat_when_full=1, bottle=1},
-			on_place = on_use,
-			on_secondary_use = on_use,
-		})
-
-		-- Register Splash and Lingering
-		local splash_dur_2 = dur_2 * mcl_potions.SPLASH_FACTOR
-		local ling_dur_2 = dur_2 * mcl_potions.LINGERING_FACTOR
-
-		local splash_def_2
-		if def.name == "healing" then
-			splash_def_2 = {
-				tt = get_tt(def._tt_2, 7, splash_dur_2),
-				longdesc = def._longdesc,
-				potion_fun = get_splash_fun(7, splash_dur_2),
-				no_effect = def.no_effect,
-				instant = def.instant,
-			}
-		else
-			splash_def_2 = {
-				tt = get_tt(def._tt_2, effect_II, splash_dur_2),
-				longdesc = def._longdesc,
-				potion_fun = get_splash_fun(effect_II, splash_dur_2),
-				no_effect = def.no_effect,
-				instant = def.instant,
-			}
-		end
-
-
-		local ling_def_2
-		if def.name == "healing" or def.name == "harming" then
-			ling_def_2 = {
-				tt = get_tt(def._tt_2, effect_II*mcl_potions.LINGERING_FACTOR, ling_dur_2),
-				longdesc = def._longdesc,
-				potion_fun = get_lingering_fun(effect_II*mcl_potions.LINGERING_FACTOR, ling_dur_2),
-				no_effect = def.no_effect,
-				instant = def.instant,
-			}
-		else
-			ling_def_2 = {
-				tt = get_tt(def._tt_2, effect_II, ling_dur_2),
-				longdesc = def._longdesc,
-				potion_fun = get_lingering_fun(effect_II, ling_dur_2),
-				no_effect = def.no_effect,
-				instant = def.instant,
-			}
-		end
-
-		local arrow_def_2 = {
-			tt = get_tt(def._tt_2, effect_II, dur_2/8.),
-			longdesc = def._longdesc,
-			potion_fun = get_arrow_fun(effect_II, dur_2/8.),
-			no_effect = def.no_effect,
-			instant = def.instant,
-		}
-
-		if def.color and not def.no_throwable then
-			mcl_potions.register_splash(def.name.."_2", S("Splash @1@2 Potion", def.description, desc_mod), def.color, splash_def_2)
-			mcl_potions.register_lingering(def.name.."_2", S("Lingering @1@2 Potion", def.description, desc_mod), def.color, ling_def_2)
-			if not def.no_arrow then
-				mcl_potions.register_arrow(def.name.."_2", S("Arrow of @1@2", def.description, desc_mod), def.color, arrow_def_2)
-			end
-		end
-
-	end
-
-	if def.is_plus then
-
-		local dur_pl = dur * mcl_potions.PLUS_FACTOR
-		if def.name == "poison" or def.name == "regeneration" or def.name == "withering" then
-			dur_pl = 90
-		end
-
-		on_use = return_on_use(def, def.effect, dur_pl)
-
-		minetest.register_craftitem("mcl_potions:"..def.name.."_plus", {
-			description = S("@1 + Potion", def.description),
-			_tt_help = get_tt(def._tt_plus, def.effect, dur_pl),
-			_doc_items_longdesc = potion_longdesc,
-			_doc_items_usagehelp = potion_usagehelp,
-			stack_max = 1,
-			inventory_image = def.image or potion_image(def.color),
-			wield_image = def.image or potion_image(def.color),
-			groups = def.groups or {brewitem=1, food=3, can_eat_when_full=1, bottle=1},
-			on_place = on_use,
-			on_secondary_use = on_use,
-		})
-
-		-- Register Splash
-		local splash_dur_pl = dur_pl * mcl_potions.SPLASH_FACTOR
-		local ling_dur_pl = dur_pl * mcl_potions.LINGERING_FACTOR
-
-		local splash_def_pl = {
-			tt = get_tt(def._tt_plus, def.effect, splash_dur_pl),
-			longdesc = def._longdesc,
-			potion_fun = get_splash_fun(def.effect, splash_dur_pl),
-			no_effect = def.no_effect,
-			instant = def.instant,
-		}
-		local ling_def_pl = {
-			tt = get_tt(def._tt_plus, def.effect, ling_dur_pl),
-			longdesc = def._longdesc,
-			potion_fun = get_lingering_fun(def.effect, ling_dur_pl),
-			no_effect = def.no_effect,
-			instant = def.instant,
-		}
-		local arrow_def_pl = {
-			tt = get_tt(def._tt_pl, def.effect, dur_pl/8.),
-			longdesc = def._longdesc,
-			potion_fun = get_arrow_fun(def.effect, dur_pl/8.),
-			no_effect = def.no_effect,
-			instant = def.instant,
-		}
-		if def.color and not def.no_throwable then
-			mcl_potions.register_splash(def.name.."_plus", S("Splash @1 + Potion", def.description), def.color, splash_def_pl)
-			mcl_potions.register_lingering(def.name.."_plus", S("Lingering @1 + Potion", def.description), def.color, ling_def_pl)
-			if not def.no_arrow then
-				mcl_potions.register_arrow(def.name.."_plus", S("Arrow of @1 +", def.description), def.color, arrow_def_pl)
-			end
-		end
-
-	end
-
-end
-
 
 -- ██████╗░░█████╗░████████╗██╗░█████╗░███╗░░██╗
 -- ██╔══██╗██╔══██╗╚══██╔══╝██║██╔══██╗████╗░██║
@@ -672,6 +365,14 @@ end
 -- ██████╔╝███████╗██║░░░░░██║██║░╚███║██║░░░██║░░░██║╚█████╔╝██║░╚███║██████╔╝
 -- ╚═════╝░╚══════╝╚═╝░░░░░╚═╝╚═╝░░╚══╝╚═╝░░░╚═╝░░░╚═╝░╚════╝░╚═╝░░╚══╝╚═════╝░
 
+
+minetest.register_craftitem("mcl_potions:dragon_breath", {
+	description = S("Dragon's Breath"),
+	_longdesc = S("This item is used in brewing and can be combined with splash potions to create lingering potions."),
+	image = "mcl_potions_dragon_breath.png",
+	groups = { brewitem = 1, bottle = 1 },
+	stack_max = 64,
+})
 
 mcl_potions.register_potion({
 	name = "awkward",
@@ -696,33 +397,6 @@ mcl_potions.register_potion({
 	_longdesc = S("Has a bitter taste and is not really useful for brewing potions."),
 	color = "#0000FF",
 })
-
-local dragon_breath_def = {
-	name = "dragon_breath",
-	description = S("Dragon's Breath"),
-	no_arrow = true,
-	no_potion = true,
-	no_throwable = true,
-	no_effect = true,
-	_longdesc = S("This item is used in brewing and can be combined with splash potions to create lingering potions."),
-	image = "mcl_potions_dragon_breath.png",
-	groups = { brewitem = 1, bottle = 1 },
-	on_use = nil,
-	stack_max = 64,
-}
-
-local healing_def = {
-	name = "healing",
-	description = S("Healing"),
-	_tt = S("+4 HP"),
-	_tt_2 = S("+8 HP"),
-	_longdesc = S("Instantly heals."),
-	color = "#F82423",
-	effect = 4,
-	instant = true,
-	on_use = mcl_potions.healing_func,
-	is_II = true,
-}
 
 mcl_potions.register_potion({
 	name = "healing",
@@ -873,18 +547,6 @@ mcl_potions.register_potion({
 	},
 	has_arrow = true,
 })
-
-
-
-local defs = { awkward_def, mundane_def, thick_def, dragon_breath_def,
-	healing_def, harming_def, night_vision_def, swiftness_def,
-	slowness_def, leaping_def, withering_def, poison_def, regeneration_def,
-	invisibility_def, water_breathing_def, fire_resistance_def}
-
--- for _, def in ipairs(defs) do
--- 	register_potion(def)
--- end
-
 
 
 
