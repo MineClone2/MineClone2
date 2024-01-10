@@ -33,12 +33,29 @@ local function generate_linear_lvl_to_fac(l1, l2)
 	end
 end
 
+local function generate_linear_fac_to_lvl(l1, l2)
+	local a = 1/(l2 - l1)
+	local b = -(2*l1 - l2) * a
+	return function(factor)
+		return math.round(a*factor + b)
+	end
+end
+
 local function generate_rational_lvl_to_fac(l1, l2)
 	local a = (l1 - l2) * 2
 	local b = 2*l2 - l1
 	return function(level)
 		if level == 0 then return 0 end
 		return (a/level + b)
+	end
+end
+
+local function generate_rational_fac_to_lvl(l1, l2)
+	local a = (l1 - l2) * 2
+	local b = 2*l2 - l1
+	return function(factor)
+		if factor == 0 then return math.huge end
+		return math.round(a/(factor - b))
 	end
 end
 
@@ -118,8 +135,12 @@ function mcl_potions.register_effect(def)
 		local l2 = def.lvl2_factor or 2*l1
 		if l1 < l2 then
 			pdef.level_to_factor = generate_linear_lvl_to_fac(l1, l2)
+			pdef.factor_to_level = generate_linear_fac_to_lvl(l1, l2)
+			pdef.inv_factor = false
 		elseif l1 > l2 then
 			pdef.level_to_factor = generate_rational_lvl_to_fac(l1, l2)
+			pdef.factor_to_level = generate_rational_fac_to_lvl(l1, l2)
+			pdef.inv_factor = true
 		else
 			error("Can't extrapolate levels from lvl1 and lvl2 bearing the same factor")
 		end
@@ -417,7 +438,8 @@ local function potions_init_icons(player)
 	icon_ids[name] = {}
 	for e=1, EFFECT_TYPES do
 		local x = -52 * e - 2
-		local id = player:hud_add({
+		local id = {}
+		id.img = player:hud_add({
 			hud_elem_type = "image",
 			text = "blank.png",
 			position = { x = 1, y = 0 },
@@ -425,6 +447,28 @@ local function potions_init_icons(player)
 			scale = { x = 0.375, y = 0.375 },
 			alignment = { x = 1, y = 1 },
 			z_index = 100,
+		})
+		id.label = player:hud_add({
+			hud_elem_type = "text",
+			text = "",
+			position = { x = 1, y = 0 },
+			offset = { x = x+22, y = 50 },
+			scale = { x = 50, y = 15 },
+			alignment = { x = 0, y = 1 },
+			z_index = 100,
+			style = 1,
+			number = 0xFFFFFF,
+		})
+		id.timestamp = player:hud_add({
+			hud_elem_type = "text",
+			text = "",
+			position = { x = 1, y = 0 },
+			offset = { x = x+22, y = 65 },
+			scale = { x = 50, y = 15 },
+			alignment = { x = 0, y = 1 },
+			z_index = 100,
+			style = 1,
+			number = 0xFFFFFF,
 		})
 		table.insert(icon_ids[name], id)
 	end
@@ -438,18 +482,37 @@ local function potions_set_icons(player)
 	local active_effects = {}
 	for effect_name, effect in pairs(EF) do
 		if effect[player] then
-			table.insert(active_effects, effect_name)
+			active_effects[effect_name] = effect[player]
 		end
 	end
 
-	for i=1, EFFECT_TYPES do
-		local icon = icon_ids[name][i]
-		local effect_name = active_effects[i]
-		if effect_name == nil then
-			player:hud_change(icon, "text", "blank.png")
-		else
-			player:hud_change(icon, "text", "mcl_potions_effect_"..effect_name..".png^[resize:128x128")
+	local i = 1
+	for effect_name, def in pairs(registered_effects) do
+		local icon = icon_ids[name][i].img
+		local label = icon_ids[name][i].label
+		local timestamp = icon_ids[name][i].timestamp
+		local vals = active_effects[effect_name]
+		if vals then
+			player:hud_change(icon, "text", def.icon .. "^[resize:128x128")
+			if def.uses_factor then
+				local level = def.factor_to_level(vals.factor)
+				if level == math.huge then level = "∞"
+				else level = mcl_util.to_roman(level) end
+				player:hud_change(label, "text", level)
+			else
+				player:hud_change(label, "text", "")
+			end
+			local dur = math.round(vals.dur-vals.timer)
+			player:hud_change(timestamp, "text", math.floor(dur/60)..string.format(":%02d",math.floor(dur % 60)))
+			EF[effect_name][player].hud_index = i
+			i = i + 1
 		end
+	end
+	while i < EFFECT_TYPES do
+		player:hud_change(icon_ids[name][i].img, "text", "blank.png")
+		player:hud_change(icon_ids[name][i].label, "text", "")
+		player:hud_change(icon_ids[name][i].timestamp, "text", "")
+		i = i + 1
 	end
 end
 
@@ -496,6 +559,10 @@ minetest.register_globalstep(function(dtime)
 					meta:set_string("mcl_potions:"..name, minetest.serialize(EF[name][object]))
 					potions_set_hud(object)
 				end
+			elseif object:is_player() then
+				local dur = math.round(vals.dur-vals.timer)
+				object:hud_change(icon_ids[object:get_player_name()][vals.hud_index].timestamp,
+					"text", math.floor(dur/60)..string.format(":%02d",math.floor(dur % 60)))
 			end
 		end
 	end
@@ -665,15 +732,7 @@ minetest.register_on_joinplayer( function(player)
 	mcl_potions._reset_player_effects(player, false) -- make sure there are no weird holdover effects
 	mcl_potions._load_player_effects(player)
 	potions_init_icons(player)
-	-- .after required because player:hud_change doesn't work when called
-	-- in same tick as player:hud_add
-	-- (see <https://github.com/minetest/minetest/pull/9611>)
-	-- FIXME: Remove minetest.after
-	minetest.after(3, function(player)
-		if player and player:is_player() then
-			potions_set_hud(player)
-		end
-	end, player)
+	potions_set_hud(player)
 end)
 
 minetest.register_on_shutdown(function()
@@ -833,14 +892,18 @@ function mcl_potions.give_effect(name, object, factor, duration)
 		if edef.on_start then edef.on_start(object, factor) end
 	else
 		local present = EF[name][object]
-		if not edef.uses_factor or (edef.uses_factor and factor >= present.factor) then
-			present.dur = math.max(duration, present.dur - present.timer)
-			present.timer = 0
-			if edef.uses_factor then
-				present.factor = factor
-				if edef.timer_uses_factor then present.step = factor end
-				if edef.on_start then edef.on_start(object, factor) end
-			end
+		if not edef.uses_factor or (edef.uses_factor and
+			(not edef.inv_factor and factor >= present.factor
+			or edef.inv_factor and factor <= present.factor)) then
+				present.dur = math.max(duration, present.dur - present.timer)
+				present.timer = 0
+				if edef.uses_factor then
+					present.factor = factor
+					if edef.timer_uses_factor then present.step = factor end
+					if edef.on_start then edef.on_start(object, factor) end
+				end
+		else
+			return false
 		end
 	end
 
