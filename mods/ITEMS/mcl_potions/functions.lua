@@ -60,11 +60,16 @@ local function generate_rational_fac_to_lvl(l1, l2)
 end
 
 local function generate_modifier_func(name, dmg_flag, mod_func)
-	return function(object, damage, reason)
+	if dmg_flag ~= "" then return function(object, damage, reason)
 		if EF[name][object] and not reason.flags.bypasses_magic and reason.flags[dmg_flag] then
-			return mod_func and mod_func(damage) or 0
+			return mod_func and mod_func(damage, EF[name][object]) or 0
 		end
 	end
+	else return function(object, damage, reason)
+		if EF[name][object] and not reason.flags.bypasses_magic then
+			return mod_func and mod_func(damage, EF[name][object]) or 0
+		end
+	end end
 end
 
 -- API - registers an effect
@@ -86,8 +91,8 @@ end
 -- lvl2_factor - integer - factor for lvl2 effect - defaults to 2 if uses_factor
 -- timer_uses_factor - bool - whether hit_timer uses factor (uses_factor must be true) or a constant value (hit_timer_step must be defined)
 -- hit_timer_step - float - interval between hit_timer hits
--- damage_modifier - string - damage flag of which damage is changed as defined by modifier_func
--- modifier_func - function(damage) - see damage_modifier, if not defined damage_modifier defaults to 100% resistance
+-- damage_modifier - string - damage flag of which damage is changed as defined by modifier_func, pass empty string for all damage
+-- modifier_func - function(damage, effect_vals) - see damage_modifier, if not defined damage_modifier defaults to 100% resistance
 -- modifier_priority - integer - priority passed when registering damage_modifier - defaults to -50
 function mcl_potions.register_effect(def)
 	local modname = minetest.get_current_modname()
@@ -369,6 +374,25 @@ mcl_potions.register_effect({
 	particle_color = "#E49A3A",
 	uses_factor = false,
 	damage_modifier = "is_fire",
+})
+
+mcl_potions.register_effect({
+	name = "resistance",
+	description = S("Resistance"),
+	get_tt = function(factor)
+		return S("resist @1% of incoming damage", math.floor(factor*100))
+	end,
+	res_condition = function(object)
+		return (not object:is_player())
+	end,
+	particle_color = "#2552A5",
+	uses_factor = true,
+	lvl1_factor = 0.2,
+	lvl2_factor = 0.4,
+	damage_modifier = "",
+	modifier_func = function(damage, effect_vals)
+		return damage - (effect_vals.factor)*damage
+	end,
 })
 
 mcl_potions.register_effect({
