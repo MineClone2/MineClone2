@@ -232,13 +232,13 @@ minetest.register_globalstep(function(dtime)
 			food_tick_timer = 0
 
 			-- let hunger work always
-			if player_health > 0 and player_health <= 20 then
+			if player_health > 0 then
 				--mcl_hunger.exhaust(player_name, mcl_hunger.EXHAUST_HUNGER) -- later for hunger status effect
 				mcl_hunger.update_exhaustion_hud(player)
 			end
 
 			if food_level >= 18 then -- slow regeneration
-				if player_health > 0 and player_health < 20 then
+				if player_health > 0 and player_health < player:get_properties().hp_max then
 					player:set_hp(player_health+1)
 					mcl_hunger.exhaust(player_name, mcl_hunger.EXHAUST_REGEN)
 					mcl_hunger.update_exhaustion_hud(player)
@@ -255,7 +255,7 @@ minetest.register_globalstep(function(dtime)
 			end
 
 		elseif food_tick_timer > max_tick_timer and food_level == 20 and food_saturation_level > 0 then -- fast regeneration
-			if player_health > 0 and player_health < 20 then
+			if player_health > 0 and player_health < player:get_properties().hp_max then
 				food_tick_timer = 0
 				player:set_hp(player_health+1)
 				mcl_hunger.exhaust(player_name, mcl_hunger.EXHAUST_REGEN)

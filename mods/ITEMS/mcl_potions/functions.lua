@@ -59,14 +59,19 @@ local function generate_rational_fac_to_lvl(l1, l2)
 	end
 end
 
-local function generate_modifier_func(name, dmg_flag, mod_func)
-	if dmg_flag ~= "" then return function(object, damage, reason)
-		if EF[name][object] and not reason.flags.bypasses_magic and reason.flags[dmg_flag] then
+local function generate_modifier_func(name, dmg_flag, mod_func, is_type)
+	if dmg_flag == "" then return function(object, damage, reason)
+		if EF[name][object] and not reason.flags.bypasses_magic then
+			return mod_func and mod_func(damage, EF[name][object]) or 0
+		end
+	end
+	elseif is_type then return function(object, damage, reason)
+		if EF[name][object] and not reason.flags.bypasses_magic and reason.type == dmg_flag then
 			return mod_func and mod_func(damage, EF[name][object]) or 0
 		end
 	end
 	else return function(object, damage, reason)
-		if EF[name][object] and not reason.flags.bypasses_magic then
+		if EF[name][object] and not reason.flags.bypasses_magic and reason.flags[dmg_flag] then
 			return mod_func and mod_func(damage, EF[name][object]) or 0
 		end
 	end end
@@ -92,6 +97,7 @@ end
 -- timer_uses_factor - bool - whether hit_timer uses factor (uses_factor must be true) or a constant value (hit_timer_step must be defined)
 -- hit_timer_step - float - interval between hit_timer hits
 -- damage_modifier - string - damage flag of which damage is changed as defined by modifier_func, pass empty string for all damage
+-- dmg_mod_is_type - bool - damage_modifier string is used as type instead of flag of damage, defaults to false
 -- modifier_func - function(damage, effect_vals) - see damage_modifier, if not defined damage_modifier defaults to 100% resistance
 -- modifier_priority - integer - priority passed when registering damage_modifier - defaults to -50
 function mcl_potions.register_effect(def)
@@ -164,7 +170,7 @@ function mcl_potions.register_effect(def)
 	end
 	if def.damage_modifier then
 		mcl_damage.register_modifier(
-			generate_modifier_func(name, def.damage_modifier, def.modifier_func),
+			generate_modifier_func(name, def.damage_modifier, def.modifier_func, def.dmg_mod_is_type),
 			def.modifier_priority or -50
 		)
 	end
@@ -296,6 +302,28 @@ mcl_potions.register_effect({
 })
 
 mcl_potions.register_effect({
+	name = "slow_falling",
+	description = S("Slow Falling"),
+	get_tt = function(factor)
+		return S("decreases gravity effects")
+	end,
+	res_condition = function(object)
+		return (not object:is_player())
+	end,
+	on_start = function(object, factor)
+		playerphysics.add_physics_factor(object, "gravity", "mcl_potions:slow_falling", 0.5)
+	end,
+	on_step = function(dtime, object, factor, duration)
+		local vel = object:get_velocity().y
+		if vel < -3 then object:add_velocity(vector.new(0,-3-vel,0)) end
+	end,
+	on_end = function(object)
+		playerphysics.remove_physics_factor(object, "gravity", "mcl_potions:slow_falling")
+	end,
+	particle_color = "#ACCCFF",
+})
+
+mcl_potions.register_effect({
 	name = "swiftness",
 	description = S("Swiftness"),
 	get_tt = function(factor)
@@ -338,6 +366,22 @@ mcl_potions.register_effect({
 })
 
 mcl_potions.register_effect({
+	name = "levitation",
+	description = S("Levitation"),
+	get_tt = function(factor)
+		return S("moves you upwards at @1 nodes/s", factor)
+	end,
+	on_step = function(dtime, object, factor, duration)
+		local vel = object:get_velocity().y
+		if vel<factor then object:add_velocity(vector.new(0,factor,0)) end
+	end,
+	particle_color = "#420E7E",
+	uses_factor = true,
+	lvl1_factor = 0.9,
+	lvl2_factor = 1.8,
+})
+
+mcl_potions.register_effect({
 	name = "night_vision",
 	description = S("Night Vision"),
 	get_tt = function(factor)
@@ -348,7 +392,7 @@ mcl_potions.register_effect({
 	end,
 	on_start = function(object, factor)
 		object:get_meta():set_int("night_vision", 1)
-	mcl_weather.skycolor.update_sky_color({object})
+		mcl_weather.skycolor.update_sky_color({object})
 	end,
 	on_step = function(dtime, object, factor, duration)
 		mcl_weather.skycolor.update_sky_color({object})
@@ -360,6 +404,64 @@ mcl_potions.register_effect({
 	end,
 	particle_color = "#1F1FA1",
 	uses_factor = false,
+})
+
+mcl_potions.register_effect({
+	name = "health_boost",
+	description = S("Health Boost"),
+	get_tt = function(factor)
+		return S("increases HP by @1", factor)
+	end,
+	res_condition = function(object)
+		return (not object:is_player())
+	end,
+	on_start = function(object, factor)
+		object:set_properties({hp_max = minetest.PLAYER_MAX_HP_DEFAULT+factor})
+	end,
+	on_end = function(object)
+		object:set_properties({hp_max = minetest.PLAYER_MAX_HP_DEFAULT})
+	end,
+	particle_color = "#FF2222",
+	uses_factor = true,
+	lvl1_factor = 4,
+	lvl2_factor = 8,
+})
+
+mcl_potions.register_effect({
+	name = "absorption",
+	description = S("Absorption"),
+	get_tt = function(factor)
+		return S("absorbs up to @1 incoming damage", factor)
+	end,
+	res_condition = function(object)
+		return (not object:is_player())
+	end,
+	on_start = function(object, factor)
+		hb.change_hudbar(object, "absorption", factor, math.floor(factor/20+1)*20)
+		EF.absorption[object].absorb = factor
+	end,
+	on_step = function(dtime, object, factor, duration)
+		hb.change_hudbar(object, "absorption", EF.absorption[object].absorb)
+	end,
+	on_end = function(object)
+		hb.change_hudbar(object, "absorption", 0)
+	end,
+	particle_color = "#B59500",
+	uses_factor = true,
+	lvl1_factor = 4,
+	lvl2_factor = 8,
+	damage_modifier = "",
+	modifier_func = function(damage, effect_vals)
+		local absorb = effect_vals.absorb
+		local carryover = 0
+		if absorb > damage then
+			effect_vals.absorb = absorb - damage
+		else
+			carryover = damage - absorb
+			effect_vals.absorb = 0
+		end
+		return carryover
+	end,
 })
 
 mcl_potions.register_effect({
@@ -438,6 +540,8 @@ mcl_potions.register_effect({
 -- ██║░░██║╚██████╔╝██████╦╝
 -- ╚═╝░░╚═╝░╚═════╝░╚═════╝░
 
+hb.register_hudbar("absorption", 0xFFFFFF, S("Absorption"), {bar = "[fill:2x16:#B59500", icon = "mcl_potions_icon_absorb.png"}, 0, 0, 0, false)
+
 local icon_ids = {}
 
 local function potions_set_hudbar(player)
@@ -496,6 +600,7 @@ local function potions_init_icons(player)
 		})
 		table.insert(icon_ids[name], id)
 	end
+	hb.init_hudbar(player, "absorption")
 end
 
 local function potions_set_icons(player)

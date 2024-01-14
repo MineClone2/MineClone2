@@ -521,7 +521,9 @@ end
 
 local function update_health(player)
 	local hp_max = player:get_properties().hp_max
-	hb.change_hudbar(player, "health", player:get_hp(), hp_max)
+	local hp = player:get_hp()
+	if hp > hp_max then hp = hp_max end
+	hb.change_hudbar(player, "health", hp, hp_max)
 end
 
 -- update built-in HUD bars
