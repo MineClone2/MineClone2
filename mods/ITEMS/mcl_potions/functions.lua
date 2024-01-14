@@ -525,6 +525,50 @@ mcl_potions.register_effect({
 	timer_uses_factor = true,
 })
 
+mcl_potions.register_effect({
+	name = "food_poisoning",
+	description = S("Food Poisoning"),
+	get_tt = function(factor)
+		return S("exhausts by @1 per second", factor)
+	end,
+	res_condition = function(object)
+		return (not object:is_player())
+	end,
+	on_start = function(object, factor)
+		hb.change_hudbar(object, "hunger", nil, nil, "mcl_hunger_icon_foodpoison.png", nil, "mcl_hunger_bar_foodpoison.png")
+		if mcl_hunger.debug then
+			hb.change_hudbar(object, "exhaustion", nil, nil, nil, nil, "mcl_hunger_bar_foodpoison.png")
+		end
+	end,
+	on_step = function(dtime, object, factor, duration)
+		mcl_hunger.exhaust(object:get_player_name(), dtime*factor)
+	end,
+	on_end = function(object)
+		mcl_hunger.reset_bars_poison_hunger(object)
+	end,
+	particle_color = "#83A061",
+	uses_factor = true,
+	lvl1_factor = 100,
+	lvl2_factor = 200,
+})
+
+mcl_potions.register_effect({
+	name = "saturation",
+	description = S("Saturation"),
+	get_tt = function(factor)
+		return S("saturates by @1 per second", factor)
+	end,
+	res_condition = function(object)
+		return (not object:is_player())
+	end,
+	on_step = function(dtime, object, factor, duration)
+		mcl_hunger.set_hunger(object, math.min(mcl_hunger.get_hunger(object)+dtime*factor, 20))
+		mcl_hunger.saturate(object:get_player_name(), dtime*factor)
+	end,
+	particle_color = "#CEAE29",
+	uses_factor = true,
+})
+
 
 -- ██╗░░░██╗██████╗░██████╗░░█████╗░████████╗███████╗
 -- ██║░░░██║██╔══██╗██╔══██╗██╔══██╗╚══██╔══╝██╔════╝
@@ -839,6 +883,14 @@ function mcl_potions.player_get_effect(player, effect_name)
 		return false
 	end
 	return EF[effect_name][player]
+end
+
+function mcl_potions.player_get_effect_level(player, effect_name)
+	if not EF[effect_name] then return end
+	local effect = EF[effect_name][player]
+	if not effect then return 0 end
+	if not registered_effects[effect_name].uses_factor then return 1 end
+	return registered_effects[effect_name].factor_to_level(effect.factor)
 end
 
 function mcl_potions.player_clear_effect(player,effect)
