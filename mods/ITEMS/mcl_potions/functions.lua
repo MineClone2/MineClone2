@@ -500,7 +500,13 @@ mcl_potions.register_effect({
 mcl_potions.register_effect({
 	name = "bad_omen",
 	description = S("Bad Omen"),
-	particle_color = "#0b6138",
+	particle_color = "#472331",
+})
+
+mcl_potions.register_effect({
+	name = "hero_of_village",
+	description = S("Hero of the Village"),
+	particle_color = "#006D2A",
 })
 
 mcl_potions.register_effect({
