@@ -592,24 +592,76 @@ mcl_potions.register_effect({
 
 hb.register_hudbar("absorption", 0xFFFFFF, S("Absorption"), {bar = "[fill:2x16:#B59500", icon = "mcl_potions_icon_absorb.png"}, 0, 0, 0, false)
 
-local icon_ids = {}
+local hp_hudbar_modifiers = {}
+
+-- API - registers a HP hudbar modifier
+-- required parameters in def:
+-- predicate - function(player) - returns true if player fulfills the requirements (eg. has the effects) for the hudbar look
+-- icon - string - name of the icon to which the modifier should change the HP hudbar heart
+-- priority - signed int - lower gets checked first, and first fulfilled predicate applies its modifier
+function mcl_potions.register_hp_hudbar_modifier(def)
+	if type(def.predicate) ~= "function" then error("Predicate must be a function") end
+	if not def.icon then error("No icon provided") end
+	if not def.priority then error("No priority provided") end
+	table.insert(hp_hudbar_modifiers, {
+		predicate = def.predicate,
+		icon = def.icon,
+		priority = def.priority,
+	})
+	table.sort(hp_hudbar_modifiers, function(a, b) return a.priority <= b.priority end)
+end
+
+mcl_potions.register_hp_hudbar_modifier({
+	predicate = function(player)
+		if EF.withering[player] and EF.regeneration[player] then return true end
+	end,
+	icon = "mcl_potions_icon_regen_wither.png",
+	priority = -30,
+})
+
+mcl_potions.register_hp_hudbar_modifier({
+	predicate = function(player)
+		if EF.withering[player] then return true end
+	end,
+	icon = "mcl_potions_icon_wither.png",
+	priority = -20,
+})
+
+mcl_potions.register_hp_hudbar_modifier({
+	predicate = function(player)
+		if EF.poison[player] and EF.regeneration[player] then return true end
+	end,
+	icon = "hbhunger_icon_regen_poison.png",
+	priority = -10,
+})
+
+mcl_potions.register_hp_hudbar_modifier({
+	predicate = function(player)
+		if EF.poison[player] then return true end
+	end,
+	icon = "hbhunger_icon_health_poison.png",
+	priority = 0,
+})
+
+mcl_potions.register_hp_hudbar_modifier({
+	predicate = function(player)
+		if EF.regeneration[player] then return true end
+	end,
+	icon = "hudbars_icon_regenerate.png",
+	priority = 10,
+})
 
 local function potions_set_hudbar(player)
-	if EF.withering[player] and EF.regeneration[player] then
-		hb.change_hudbar(player, "health", nil, nil, "mcl_potions_icon_regen_wither.png", nil, "hudbars_bar_health.png")
-	elseif EF.withering[player] then
-		hb.change_hudbar(player, "health", nil, nil, "mcl_potions_icon_wither.png", nil, "hudbars_bar_health.png")
-	elseif EF.poison[player] and EF.regeneration[player] then
-		hb.change_hudbar(player, "health", nil, nil, "hbhunger_icon_regen_poison.png", nil, "hudbars_bar_health.png")
-	elseif EF.poison[player] then
-		hb.change_hudbar(player, "health", nil, nil, "hbhunger_icon_health_poison.png", nil, "hudbars_bar_health.png")
-	elseif EF.regeneration[player] then
-		hb.change_hudbar(player, "health", nil, nil, "hudbars_icon_regenerate.png", nil, "hudbars_bar_health.png")
-	else
-		hb.change_hudbar(player, "health", nil, nil, "hudbars_icon_health.png", nil, "hudbars_bar_health.png")
+	for _, mod in pairs(hp_hudbar_modifiers) do
+		if mod.predicate(player) then
+			hb.change_hudbar(player, "health", nil, nil, mod.icon, nil, "hudbars_bar_health.png")
+			return
+		end
 	end
-
+	hb.change_hudbar(player, "health", nil, nil, "hudbars_icon_health.png", nil, "hudbars_bar_health.png")
 end
+
+local icon_ids = {}
 
 local function potions_init_icons(player)
 	local name = player:get_player_name()
