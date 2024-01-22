@@ -75,7 +75,7 @@ minetest.register_on_respawnplayer(function(player)
 	mcl_fovapi.remove_all_modifiers(player)
 end)
 
-function mcl_fovapi.apply_modifier(player, modifier_name)
+function mcl_fovapi.apply_modifier(player, modifier_name, time_override)
 	if not player or not modifier_name then
 		return
 	end
@@ -106,13 +106,14 @@ function mcl_fovapi.apply_modifier(player, modifier_name)
 		minetest.log("FOV::Modifier applied to player:" .. player_name .. " modifier: " .. modifier_name)
 	end
 
+	local time = time_override or modifier.time
 	-- modifier apply code.
 	if modifier.exclusive == true then
 		-- if exclusive, reset the player's fov, and apply the new fov.
 		if modifier.is_multiplier then
 			player:set_fov(0, false, 0)
 		end
-		player:set_fov(modifier.fov_factor, modifier.is_multiplier, modifier.time)
+		player:set_fov(modifier.fov_factor, modifier.is_multiplier, time)
 	else
 		-- not exclusive? let's apply it in the mix.
 		local fov_factor, is_mult = player:get_fov()
@@ -126,15 +127,15 @@ function mcl_fovapi.apply_modifier(player, modifier_name)
 			fov_factor = (fov_factor + modifier.fov_factor) / 2
 		end
 		if modifier.is_multiplier and is_mult then
-			player:set_fov(fov_factor, true, modifier.time)
+			player:set_fov(fov_factor, true, time)
 		else
-			player:set_fov(fov_factor, false, modifier.time)
+			player:set_fov(fov_factor, false, time)
 		end
 	end
 
 end
 
-function mcl_fovapi.remove_modifier(player, modifier_name)
+function mcl_fovapi.remove_modifier(player, modifier_name, time_override)
 	if not player or not modifier_name then
 		return
 	end
@@ -159,9 +160,10 @@ function mcl_fovapi.remove_modifier(player, modifier_name)
 		applied[k] = mcl_fovapi.registered_modifiers[k]
 	end
 
+	local time = time_override or modifier.reset_time
 	local elem = next
 	if elem(applied) == nil then
-		player:set_fov(0, false, modifier.reset_time)
+		player:set_fov(0, false, time)
 		return
 	end
 	local exc = false
@@ -191,7 +193,7 @@ function mcl_fovapi.remove_modifier(player, modifier_name)
 				fov_factor = fov_factor * x.fov_factor
 			end
 		end
-		player:set_fov(fov_factor, not non_multiplier_added, modifier.reset_time)
+		player:set_fov(fov_factor, not non_multiplier_added, time)
 	end
 
 	if mcl_fovapi.registered_modifiers[modifier_name].on_end then
