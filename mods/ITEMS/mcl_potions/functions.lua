@@ -259,7 +259,7 @@ mcl_potions.register_effect({
 	res_condition = function(object)
 		return (not object:is_player())
 	end,
-	particle_color = "#484D48",
+	particle_color = "#485D48",
 })
 
 mcl_potions.register_effect({
@@ -419,14 +419,14 @@ mcl_potions.register_effect({
 		object:get_meta():set_int("darkness", 1)
 		mcl_weather.skycolor.update_sky_color({object})
 		object:set_sky({fog = {
-			fog_distance = 10,
+			fog_distance = factor,
 		}})
 		EF.darkness[object].flash = 0.6
 	end,
 	on_step = function(dtime, object, factor, duration)
 		if object:get_meta():get_int("night_vision") ~= 1 then
 			local flash = EF.darkness[object].flash
-			if flash < 0.1 then EF.darkness[object].flashdir = true
+			if flash < 0.2 then EF.darkness[object].flashdir = true
 			elseif flash > 0.6 then EF.darkness[object].flashdir = false end
 			flash = EF.darkness[object].flashdir and (flash + dtime) or (flash - dtime)
 			object:set_sky({fog = {
@@ -435,7 +435,7 @@ mcl_potions.register_effect({
 			EF.darkness[object].flash = flash
 		else
 			object:set_sky({fog = {
-				fog_start = 0.99,
+				fog_start = 0.9,
 			}})
 		end
 		mcl_weather.skycolor.update_sky_color({object})
@@ -449,7 +449,9 @@ mcl_potions.register_effect({
 		}})
 	end,
 	particle_color = "#000000",
-	uses_factor = false,
+	uses_factor = true,
+	lvl1_factor = 30,
+	lvl2_factor = 20,
 })
 
 mcl_potions.register_effect({
@@ -573,7 +575,7 @@ mcl_potions.register_effect({
 			mcl_util.deal_damage(object, 1, {type = "magic"})
 		end
 	end,
-	particle_color = "#000000",
+	particle_color = "#292929",
 	uses_factor = true,
 	lvl1_factor = 2,
 	lvl2_factor = 1,

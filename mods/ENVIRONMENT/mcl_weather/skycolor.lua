@@ -124,7 +124,8 @@ mcl_weather.skycolor = {
 		local is_visited_shepherd = meta:get_int("mcl_shepherd:special") == 1
 		local arg
 		if has_darkness and not is_visited_shepherd then
-			arg = 0
+			if has_night_vision then arg = 0.1
+			else arg = 0 end
 		else
 			-- Apply night vision only for dark sky
 			local is_dark = minetest.get_timeofday() > 0.8 or minetest.get_timeofday() < 0.2 or mcl_weather.state ~= "none"
