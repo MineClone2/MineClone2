@@ -407,6 +407,52 @@ mcl_potions.register_effect({
 })
 
 mcl_potions.register_effect({
+	name = "darkness",
+	description = S("Darkness"),
+	get_tt = function(factor)
+		return S("surrounded by darkness")
+	end,
+	res_condition = function(object)
+		return (not object:is_player())
+	end,
+	on_start = function(object, factor)
+		object:get_meta():set_int("darkness", 1)
+		mcl_weather.skycolor.update_sky_color({object})
+		object:set_sky({fog = {
+			fog_distance = 10,
+		}})
+		EF.darkness[object].flash = 0.6
+	end,
+	on_step = function(dtime, object, factor, duration)
+		if object:get_meta():get_int("night_vision") ~= 1 then
+			local flash = EF.darkness[object].flash
+			if flash < 0.1 then EF.darkness[object].flashdir = true
+			elseif flash > 0.6 then EF.darkness[object].flashdir = false end
+			flash = EF.darkness[object].flashdir and (flash + dtime) or (flash - dtime)
+			object:set_sky({fog = {
+				fog_start = flash,
+			}})
+			EF.darkness[object].flash = flash
+		else
+			object:set_sky({fog = {
+				fog_start = 0.99,
+			}})
+		end
+		mcl_weather.skycolor.update_sky_color({object})
+	end,
+	on_end = function(object)
+		object:get_meta():set_int("darkness", 0)
+		mcl_weather.skycolor.update_sky_color({object})
+		object:set_sky({fog = {
+			fog_distance = -1,
+			fog_start = -1,
+		}})
+	end,
+	particle_color = "#000000",
+	uses_factor = false,
+})
+
+mcl_potions.register_effect({
 	name = "health_boost",
 	description = S("Health Boost"),
 	get_tt = function(factor)

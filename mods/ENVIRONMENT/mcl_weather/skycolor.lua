@@ -120,20 +120,25 @@ mcl_weather.skycolor = {
 	override_day_night_ratio = function(player, ratio)
 		local meta = player:get_meta()
 		local has_night_vision = meta:get_int("night_vision") == 1
+		local has_darkness = meta:get_int("darkness") == 1
 		local is_visited_shepherd = meta:get_int("mcl_shepherd:special") == 1
 		local arg
-		-- Apply night vision only for dark sky
-		local is_dark = minetest.get_timeofday() > 0.8 or minetest.get_timeofday() < 0.2 or mcl_weather.state ~= "none"
-		local pos = player:get_pos()
-		local dim = mcl_worlds.pos_to_dimension(pos)
-		if (has_night_vision or is_visited_shepherd) and is_dark and dim ~= "nether" and dim ~= "end" then
-			if ratio == nil then
-				arg = NIGHT_VISION_RATIO
-			else
-				arg = math.max(ratio, NIGHT_VISION_RATIO)
-			end
+		if has_darkness and not is_visited_shepherd then
+			arg = 0
 		else
-			arg = ratio
+			-- Apply night vision only for dark sky
+			local is_dark = minetest.get_timeofday() > 0.8 or minetest.get_timeofday() < 0.2 or mcl_weather.state ~= "none"
+			local pos = player:get_pos()
+			local dim = mcl_worlds.pos_to_dimension(pos)
+			if (has_night_vision or is_visited_shepherd) and is_dark and dim ~= "nether" and dim ~= "end" then
+				if ratio == nil then
+					arg = NIGHT_VISION_RATIO
+				else
+					arg = math.max(ratio, NIGHT_VISION_RATIO)
+				end
+			else
+				arg = ratio
+			end
 		end
 		player:override_day_night_ratio(arg)
 	end,
