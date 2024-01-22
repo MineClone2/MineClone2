@@ -630,6 +630,54 @@ mcl_fovapi.register_modifier({
 })
 
 mcl_potions.register_effect({
+	name = "nausea",
+	description = S("Nausea"),
+	get_tt = function(factor)
+		return S("not feeling very well...")
+	end,
+	res_condition = function(object)
+		return (not object:is_player())
+	end,
+	on_start = function(object, factor)
+		object:set_lighting({
+			saturation = -1.0,
+		})
+	end,
+	on_hit_timer = function(object, factor, duration)
+		if EF.nausea[object].high then
+			mcl_fovapi.remove_modifier(object, "mcl_potions:nausea_high")
+			mcl_fovapi.apply_modifier(object, "mcl_potions:nausea_low")
+			EF.nausea[object].high = false
+		else
+			mcl_fovapi.apply_modifier(object, "mcl_potions:nausea_high")
+			mcl_fovapi.remove_modifier(object, "mcl_potions:nausea_low")
+			EF.nausea[object].high = true
+		end
+	end,
+	on_end = function(object)
+		object:set_lighting({
+			saturation = 1.0,
+		})
+		mcl_fovapi.remove_modifier(object, "mcl_potions:nausea_high")
+		mcl_fovapi.remove_modifier(object, "mcl_potions:nausea_low")
+	end,
+	particle_color = "#60AA30",
+	uses_factor = false,
+	timer_uses_factor = false,
+	hit_timer_step = 1,
+})
+mcl_fovapi.register_modifier({
+	name = "mcl_potions:nausea_high",
+	fov_factor = 2.2,
+	time = 1,
+})
+mcl_fovapi.register_modifier({
+	name = "mcl_potions:nausea_low",
+	fov_factor = 0.2,
+	time = 1,
+})
+
+mcl_potions.register_effect({
 	name = "food_poisoning",
 	description = S("Food Poisoning"),
 	get_tt = function(factor)
