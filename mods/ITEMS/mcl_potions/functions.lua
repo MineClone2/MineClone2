@@ -54,7 +54,7 @@ local function generate_rational_fac_to_lvl(l1, l2)
 	local a = (l1 - l2) * 2
 	local b = 2*l2 - l1
 	return function(factor)
-		if factor == 0 then return math.huge end
+		if (factor - b) == 0 then return math.huge end
 		return math.round(a/(factor - b))
 	end
 end
@@ -247,20 +247,40 @@ mcl_potions.register_effect({
 mcl_potions.register_effect({
 	name = "strength",
 	description = S("Strength"),
-	res_condition = function(object)
-		return (not object:is_player())
+	get_tt = function(factor)
+		return S("+@1% melee damage", factor-1)
 	end,
 	particle_color = "#932423",
+	uses_factor = true,
+	lvl1_factor = 1.3,
+	lvl2_factor = 1.6,
 })
 
 mcl_potions.register_effect({
 	name = "weakness",
 	description = S("Weakness"),
-	res_condition = function(object)
-		return (not object:is_player())
+	get_tt = function(factor)
+		return S("-@1% melee damage", 1-factor)
 	end,
 	particle_color = "#485D48",
+	uses_factor = true,
+	lvl1_factor = 0.8,
+	lvl2_factor = 0.6,
 })
+
+-- implementation of strength and weakness effects
+-- mobs have this implemented in mcl_mobs/combat.lua in mob_class:on_punch()
+mcl_damage.register_modifier(function(object, damage, reason)
+	if reason.direct and reason.direct == reason.source then
+		local hitter = reason.direct
+		local strength = EF.strength[hitter]
+		local weakness = EF.weakness[hitter]
+		if not strength and not weakness then return end
+		local str_fac = strength and strength.factor or 1
+		local weak_fac = weakness and weakness.factor or 1
+		return damage * str_fac * weak_fac
+	end
+end, 0)
 
 mcl_potions.register_effect({
 	name = "water_breathing",
@@ -944,7 +964,9 @@ local function potions_set_icons(player)
 			player:hud_change(icon, "text", def.icon .. "^[resize:128x128")
 			if def.uses_factor then
 				local level = def.factor_to_level(vals.factor)
-				if level == math.huge then level = "∞"
+				if level > 3000 or level == math.huge then level = "∞"
+				elseif level < 0  then level = "???"
+				elseif level == 0 then level = "0"
 				else level = mcl_util.to_roman(level) end
 				player:hud_change(label, "text", level)
 			else
