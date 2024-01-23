@@ -1145,32 +1145,33 @@ function mcl_potions._load_player_effects(player)
 	end
 end
 
--- Returns true if player has given effect
-function mcl_potions.player_has_effect(player, effect_name)
+-- Returns true if object has given effect
+function mcl_potions.has_effect(object, effect_name)
 	if not EF[effect_name] then
 		return false
 	end
-	return EF[effect_name][player] ~= nil
+	return EF[effect_name][object] ~= nil
 end
 
-function mcl_potions.player_get_effect(player, effect_name)
-	if not EF[effect_name] or not EF[effect_name][player] then
+function mcl_potions.get_effect(object, effect_name)
+	if not EF[effect_name] or not EF[effect_name][object] then
 		return false
 	end
-	return EF[effect_name][player]
+	return EF[effect_name][object]
 end
 
-function mcl_potions.player_get_effect_level(player, effect_name)
+function mcl_potions.get_effect_level(object, effect_name)
 	if not EF[effect_name] then return end
-	local effect = EF[effect_name][player]
+	local effect = EF[effect_name][object]
 	if not effect then return 0 end
 	if not registered_effects[effect_name].uses_factor then return 1 end
 	return registered_effects[effect_name].factor_to_level(effect.factor)
 end
 
-function mcl_potions.player_clear_effect(player,effect)
-	EF[effect][player] = nil
-	potions_set_hud(player)
+function mcl_potions.clear_effect(object, effect)
+	EF[effect][object] = nil
+	if not object:is_player() then return end
+	potions_set_hud(object)
 end
 
 minetest.register_on_leaveplayer( function(player)

@@ -104,7 +104,7 @@ function mcl_raids.promote_to_raidcaptain(c) -- object
 			mcl_raids.drop_obanner(pos)
 			if cmi_cause and cmi_cause.type == "punch" and cmi_cause.puncher:is_player() then
 				awards.unlock(cmi_cause.puncher:get_player_name(), "mcl:voluntary_exile")
-				local lv = mcl_potions.player_get_effect(cmi_cause.puncher, "bad_omen")
+				local lv = mcl_potions.get_effect(cmi_cause.puncher, "bad_omen")
 				if not lv then lv = 0
 				else lv = lv.factor end
 				lv = math.max(5,lv + 1)
@@ -296,7 +296,7 @@ mcl_events.register_event("raid",{
 		--minetest.log("Cond start raid")
 		local r = {}
 		for _,p in pairs(minetest.get_connected_players()) do
-			if mcl_potions.player_has_effect(p,"bad_omen") then
+			if mcl_potions.has_effect(p,"bad_omen") then
 				local raid_pos = mcl_raids.find_village(p:get_pos())
 				if raid_pos then
 					--minetest.log("We have a raid position. Start raid")
@@ -310,7 +310,7 @@ mcl_events.register_event("raid",{
 		self.mobs = {}
 		self.health_max = 1
 		self.health = 0
-		local lv = mcl_potions.player_get_effect(minetest.get_player_by_name(self.player), "bad_omen")
+		local lv = mcl_potions.get_effect(minetest.get_player_by_name(self.player), "bad_omen")
 		if lv and lv.factor and lv.factor > 1 then self.max_stage = 6 end
 	end,
 	cond_progress = function(self)
@@ -331,7 +331,7 @@ mcl_events.register_event("raid",{
 	end,
 	on_complete = function(self)
 		awards.unlock(self.player,"mcl:hero_of_the_village")
-		mcl_potions.player_clear_effect(minetest.get_player_by_name(self.player),"bad_omen")
+		mcl_potions.clear_effect(minetest.get_player_by_name(self.player),"bad_omen")
 		make_firework(self.pos,os.time())
 	end,
 })
