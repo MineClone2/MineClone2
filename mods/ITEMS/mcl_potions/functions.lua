@@ -817,6 +817,63 @@ mcl_potions.register_effect({
 	uses_factor = true,
 })
 
+mcl_potions.register_effect({
+	name = "haste",
+	description = S("Haste"),
+	res_condition = function(object)
+		return (not object:is_player())
+	end,
+	particle_color = "#FFFF00",
+	uses_factor = true,
+	lvl1_factor = 0.2,
+	lvl2_factor = 0.4,
+})
+
+mcl_potions.register_effect({
+	name = "fatigue",
+	description = S("Fatigue"),
+	res_condition = function(object)
+		return (not object:is_player())
+	end,
+	particle_color = "#64643D",
+	uses_factor = true,
+	lvl1_factor = 0.3,
+	lvl2_factor = 0.09,
+})
+
+-- implementation of haste and fatigue effects for digging
+minetest.register_on_punchnode(function(pos, node, puncher, pointed_thing)
+	local item = puncher:get_wielded_item()
+	local meta = item:get_meta()
+	local haste = EF.haste[puncher]
+	local fatigue = EF.fatigue[puncher]
+	local item_haste = meta:get_float("mcl_potions:haste")
+	local item_fatig = 1 - meta:get_float("mcl_potions:fatigue")
+	local h_fac
+	if haste then h_fac = haste.factor
+	else h_fac = 0 end
+	local f_fac
+	if fatigue then f_fac = fatigue.factor
+	else f_fac = 1 end
+	if f_fac < 0 then f_fac = 0 end
+	if item_haste ~= h_fac or item_fatig ~= f_fac then
+		meta:set_float("mcl_potions:haste", h_fac)
+		meta:set_float("mcl_potions:fatigue", 1 - f_fac)
+		meta:set_tool_capabilities()
+		local toolcaps = item:get_tool_capabilities()
+-- 		if not toolcaps or not toolcaps.groupcaps then return end
+		for name, group in pairs(toolcaps.groupcaps) do
+			local t = group.times
+			for i=1, #t do
+				t[i] = t[i] / (1+h_fac) / f_fac
+			end
+		end
+		-- TODO attack speed change?
+		meta:set_tool_capabilities(toolcaps)
+		puncher:set_wielded_item(item)
+	end
+end)
+
 
 -- ██╗░░░██╗██████╗░██████╗░░█████╗░████████╗███████╗
 -- ██║░░░██║██╔══██╗██╔══██╗██╔══██╗╚══██╔══╝██╔════╝
