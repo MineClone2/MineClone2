@@ -300,6 +300,27 @@ mcl_potions.register_effect({
 })
 
 mcl_potions.register_effect({
+	name = "dolphin_grace",
+	description = S("Dolphin's Grace"),
+	get_tt = function(factor)
+		return S("swimming gracefully")
+	end,
+	on_hit_timer = function(object, factor, duration)
+		local node = minetest.get_node_or_nil(object:get_pos())
+		if node and minetest.registered_nodes[node.name]
+			and minetest.get_item_group(node.name, "liquid") ~= 0 then
+				playerphysics.add_physics_factor(object, "speed", "mcl_potions:dolphin", 2)
+		else
+			playerphysics.remove_physics_factor(object, "speed", "mcl_potions:dolphin", 2)
+		end
+	end,
+	particle_color = "#6AABFD",
+	uses_factor = false,
+	timer_uses_factor = false,
+	hit_timer_step = 1,
+})
+
+mcl_potions.register_effect({
 	name = "leaping",
 	description = S("Leaping"),
 	get_tt = function(factor)
