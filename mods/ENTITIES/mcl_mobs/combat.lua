@@ -534,6 +534,8 @@ function mob_class:on_punch(hitter, tflp, tool_capabilities, dir)
 		if self.protected and minetest.is_protected(mob_pos, hitter:get_player_name()) then
 			return
 		end
+
+		mcl_potions.update_haste_and_fatigue(hitter)
 	end
 
 	local time_now = minetest.get_us_time()

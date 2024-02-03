@@ -213,7 +213,6 @@ function mcl_potions.register_potion(def)
 	local has_plus = false
 	if def._effect_list then
 		for name, details in pairs(def._effect_list) do
-			no_effects = false
 			effect = mcl_potions.registered_effects[name]
 			if effect then
 				local ulvl

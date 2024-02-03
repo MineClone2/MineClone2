@@ -841,38 +841,61 @@ mcl_potions.register_effect({
 	lvl2_factor = 0.09,
 })
 
--- implementation of haste and fatigue effects for digging
-minetest.register_on_punchnode(function(pos, node, puncher, pointed_thing)
-	local item = puncher:get_wielded_item()
+-- implementation of haste and fatigue effects
+local LONGEST_MINING_TIME = 300
+function mcl_potions.update_haste_and_fatigue(player)
+	local item = player:get_wielded_item()
 	local meta = item:get_meta()
-	local haste = EF.haste[puncher]
-	local fatigue = EF.fatigue[puncher]
+	local haste = EF.haste[player]
+	local fatigue = EF.fatigue[player]
 	local item_haste = meta:get_float("mcl_potions:haste")
 	local item_fatig = 1 - meta:get_float("mcl_potions:fatigue")
 	local h_fac
 	if haste then h_fac = haste.factor
 	else h_fac = 0 end
+	if h_fac < 0 then h_fac = 0 end
 	local f_fac
 	if fatigue then f_fac = fatigue.factor
 	else f_fac = 1 end
 	if f_fac < 0 then f_fac = 0 end
 	if item_haste ~= h_fac or item_fatig ~= f_fac then
-		meta:set_float("mcl_potions:haste", h_fac)
-		meta:set_float("mcl_potions:fatigue", 1 - f_fac)
+		if h_fac ~= 0 then meta:set_float("mcl_potions:haste", h_fac)
+		else meta:set_string("mcl_potions:haste", "") end
+		if f_fac ~= 1 then meta:set_float("mcl_potions:fatigue", 1 - f_fac)
+		else meta:set_string("mcl_potions:fatigue", "") end
 		meta:set_tool_capabilities()
+		mcl_enchanting.update_groupcaps(item)
+		if h_fac == 0 and f_fac == 1 then
+			player:set_wielded_item(item)
+			return
+		end
 		local toolcaps = item:get_tool_capabilities()
--- 		if not toolcaps or not toolcaps.groupcaps then return end
+		toolcaps.full_punch_interval = toolcaps.full_punch_interval / (1+h_fac) / f_fac
 		for name, group in pairs(toolcaps.groupcaps) do
 			local t = group.times
 			for i=1, #t do
-				t[i] = t[i] / (1+h_fac) / f_fac
+				if f_fac == 0 then
+					t[i] = t[i] > LONGEST_MINING_TIME and t[i] or LONGEST_MINING_TIME
+				else
+					local old_time = t[i]
+					t[i] = t[i] / (1+h_fac) / f_fac
+					if old_time < LONGEST_MINING_TIME and t[i] > LONGEST_MINING_TIME then
+						t[i] = LONGEST_MINING_TIME
+					end
+				end
 			end
 		end
-		-- TODO attack speed change?
 		meta:set_tool_capabilities(toolcaps)
-		puncher:set_wielded_item(item)
+		player:set_wielded_item(item)
 	end
+end
+minetest.register_on_punchnode(function(pos, node, puncher, pointed_thing)
+	mcl_potions.update_haste_and_fatigue(puncher)
 end)
+minetest.register_on_punchplayer(function(player, hitter)
+	mcl_potions.update_haste_and_fatigue(hitter)
+end)
+-- update when hitting mob implemented in mcl_mobs/combat.lua
 
 
 -- ██╗░░░██╗██████╗░██████╗░░█████╗░████████╗███████╗
@@ -1131,6 +1154,22 @@ end)
 -- ███████╗╚█████╔╝██║░░██║██████╔╝██╔╝░░░██████╔╝██║░░██║░░╚██╔╝░░███████╗
 -- ╚══════╝░╚════╝░╚═╝░░╚═╝╚═════╝░╚═╝░░░░╚═════╝░╚═╝░░╚═╝░░░╚═╝░░░╚══════╝
 
+function mcl_potions._reset_haste_fatigue_item_meta(player)
+	local inv = player:get_inventory()
+	if not inv then return end
+	local lists = inv:get_lists()
+	for _, list in pairs(lists) do
+		for _, item in pairs(list) do
+			local meta = item:get_meta()
+			meta:set_string("mcl_potions:haste", "")
+			meta:set_string("mcl_potions:fatigue", "")
+			meta:set_tool_capabilities()
+			mcl_enchanting.update_groupcaps(item)
+		end
+	end
+	inv:set_lists(lists)
+end
+
 function mcl_potions._clear_cached_player_data(player)
 	for name, effect in pairs(EF) do
 		effect[player] = nil
@@ -1288,6 +1327,7 @@ end)
 minetest.register_on_joinplayer( function(player)
 	mcl_potions._reset_player_effects(player, false) -- make sure there are no weird holdover effects
 	mcl_potions._load_player_effects(player)
+	mcl_potions._reset_haste_fatigue_item_meta(player)
 	potions_init_icons(player)
 	potions_set_hud(player)
 end)
