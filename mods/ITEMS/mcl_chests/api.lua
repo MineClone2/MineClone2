@@ -434,7 +434,7 @@ function mcl_chests.register_chest(basename, d)
 			-- FIXME: Remove this workaround when the bug has been fixed.
 			-- BEGIN OF WORKAROUND --
 			meta:set_string("workaround", "ignore_me")
-			meta:set_string("workaround", nil) -- Done to keep metadata clean
+			meta:set_string("workaround", "") -- Done to keep metadata clean
 			-- END OF WORKAROUND --
 
 			local inv = meta:get_inventory()
