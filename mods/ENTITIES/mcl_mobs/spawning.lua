@@ -13,7 +13,7 @@ local get_node                     = minetest.get_node
 local get_item_group               = minetest.get_item_group
 local get_node_light               = minetest.get_node_light
 local find_nodes_in_area_under_air = minetest.find_nodes_in_area_under_air
-local get_biome_name               = minetest.get_biome_name
+local mt_get_biome_name            = minetest.get_biome_name
 local get_objects_inside_radius    = minetest.get_objects_inside_radius
 local get_connected_players        = minetest.get_connected_players
 
@@ -664,7 +664,29 @@ local function has_room(self,pos)
 	return true
 end
 
+mcl_mobs.custom_biomecheck = nil
 
+function mcl_mobs.register_custom_biomecheck(custom_biomecheck)
+	mcl_mobs.custom_biomecheck = custom_biomecheck
+end
+
+
+local function get_biome_name(pos)
+	if mcl_mobs.custom_biomecheck then
+		return mcl_mobs.custom_biomecheck (pos)
+	else
+		local gotten_biome = minetest.get_biome_data(pos)
+
+		if not gotten_biome then
+			return
+		end
+
+		gotten_biome = mt_get_biome_name(gotten_biome.biome)
+		--minetest.log ("biome: " .. dump(gotten_biome))
+
+		return gotten_biome
+	end
+end
 
 local function spawn_check(pos, spawn_def)
 	if not spawn_def or not pos then return end
@@ -674,11 +696,10 @@ local function spawn_check(pos, spawn_def)
 	local mob_def = minetest.registered_entities[spawn_def.name]
 	local mob_type = mob_def.type
 	local gotten_node = get_node(pos).name
-	local gotten_biome = minetest.get_biome_data(pos)
+	if not gotten_node then return end
 
-	if not gotten_node or not gotten_biome then return end
-
-	gotten_biome = get_biome_name(gotten_biome.biome) --makes it easier to work with
+	local biome_name = get_biome_name(pos)
+	if not biome_name then return end
 
 	local is_ground = minetest.get_item_group(gotten_node,"solid") ~= 0
 	if not is_ground then
@@ -696,8 +717,9 @@ local function spawn_check(pos, spawn_def)
 	if pos.y >= spawn_def.min_height
 			and pos.y <= spawn_def.max_height
 			and spawn_def.dimension == dimension
-			and biome_check(spawn_def.biomes, gotten_biome) then
+			and biome_check(spawn_def.biomes, biome_name) then
 
+		mcl_log("Spawn level 1 check - Passed")
 		if  (is_ground or spawn_def.type_of_spawning ~= "ground")
 				and (spawn_def.type_of_spawning ~= "ground" or not is_leaf)
 				and (not is_farm_animal(spawn_def.name) or is_grass)
@@ -707,6 +729,7 @@ local function spawn_check(pos, spawn_def)
 				and (spawn_def.check_position and spawn_def.check_position(pos) or spawn_def.check_position == nil)
 				and ( not spawn_protected or not minetest.is_protected(pos, "") ) then
 
+			mcl_log("Spawn level 2 check - Passed")
 			local gotten_light = get_node_light(pos)
 
 			if modern_lighting then
