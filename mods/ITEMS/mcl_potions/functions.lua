@@ -843,7 +843,9 @@ mcl_potions.register_effect({
 
 -- implementation of haste and fatigue effects
 local LONGEST_MINING_TIME = 300
+local LONGEST_PUNCH_INTERVAL = 10
 function mcl_potions.update_haste_and_fatigue(player)
+	if mcl_gamemode.get_gamemode(player) == "creative" then return end
 	local item = player:get_wielded_item()
 	local meta = item:get_meta()
 	local haste = EF.haste[player]
@@ -870,7 +872,12 @@ function mcl_potions.update_haste_and_fatigue(player)
 			return
 		end
 		local toolcaps = item:get_tool_capabilities()
-		toolcaps.full_punch_interval = toolcaps.full_punch_interval / (1+h_fac) / f_fac
+		if f_fac == 0 then
+			local fpi = toolcaps.full_punch_interval
+			toolcaps.full_punch_interval = fpi > LONGEST_PUNCH_INTERVAL and fpi or LONGEST_PUNCH_INTERVAL
+		else
+			toolcaps.full_punch_interval = toolcaps.full_punch_interval / (1+h_fac) / f_fac
+		end
 		for name, group in pairs(toolcaps.groupcaps) do
 			local t = group.times
 			for i=1, #t do
@@ -1169,6 +1176,7 @@ function mcl_potions._reset_haste_fatigue_item_meta(player)
 	end
 	inv:set_lists(lists)
 end
+mcl_gamemode.register_on_gamemode_change(mcl_potions._reset_haste_fatigue_item_meta)
 
 function mcl_potions._clear_cached_player_data(player)
 	for name, effect in pairs(EF) do
