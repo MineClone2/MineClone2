@@ -76,13 +76,16 @@ else
 end
 
 function mcl_meshhand.update_player(player)
+	local hand
 	if mcl_skins_enabled then
 		local node_id = mcl_skins.get_node_id_by_player(player)
-		player:get_inventory():set_stack("hand", 1, "mcl_meshhand:" .. node_id)
+		hand = ItemStack("mcl_meshhand:" .. node_id)
 	else
 		local creative = minetest.is_creative_enabled(player:get_player_name())
-		player:get_inventory():set_stack("hand", 1, "mcl_meshhand:hand" .. (creative and "_crea" or "_surv"))
+		hand = ItemStack("mcl_meshhand:hand" .. (creative and "_crea" or "_surv"))
 	end
+	if not mcl_potions then player:get_inventory():set_stack("hand", 1, hand) end
+	player:get_inventory():set_stack("hand", 1, mcl_potions.hf_update_internal(hand, player))
 end
 
 minetest.register_on_joinplayer(function(player)

@@ -4,6 +4,9 @@ local EF = {}
 mcl_potions.registered_effects = {}
 local registered_effects = mcl_potions.registered_effects -- shorthand ref
 
+-- effects affecting item speed utilize numerous hacks, so they have to be counted separately
+local item_speed_effects = {}
+
 local EFFECT_TYPES = 0
 minetest.register_on_mods_loaded(function()
 	for _,_ in pairs(EF) do
@@ -90,6 +93,7 @@ end
 -- on_step - function(dtime, object, factor, duration) - running every step for all objects with this effect
 -- on_hit_timer - function(object, factor, duration) - if defined runs a hit_timer depending on timer_uses_factor value
 -- on_end - function(object) - called when the effect wears off
+-- after_end - function(object) - called when the effect wears off, after purging the data of the effect
 -- particle_color - string - colorstring for particles - defaults to #3000EE
 -- uses_factor - bool - whether factor affects the effect
 -- lvl1_factor - integer - factor for lvl1 effect - defaults to 1 if uses_factor
@@ -100,6 +104,14 @@ end
 -- dmg_mod_is_type - bool - damage_modifier string is used as type instead of flag of damage, defaults to false
 -- modifier_func - function(damage, effect_vals) - see damage_modifier, if not defined damage_modifier defaults to 100% resistance
 -- modifier_priority - integer - priority passed when registering damage_modifier - defaults to -50
+-- affects_item_speed - table
+-- -- if provided, effect gets added to the item_speed_effects table, this should be true if the effect affects item speeds,
+-- -- otherwise it won't work properly with other such effects (like haste and fatigue)
+-- -- -- factor_is_positive - bool - whether values of factor between 0 and 1 should be considered +factor% or speed multiplier
+-- -- --   - obviously +factor% is positive and speed multiplier is negative interpretation
+-- -- --   - values of factor higher than 1 will have a positive effect regardless
+-- -- --   - values of factor lower than 0 will have a negative effect regardless
+-- -- --   - open an issue on our tracker if you have a usage that isn't supported by this API
 function mcl_potions.register_effect(def)
 	local modname = minetest.get_current_modname()
 	local name = def.name
@@ -176,6 +188,7 @@ function mcl_potions.register_effect(def)
 	end
 	registered_effects[name] = pdef
 	EF[name] = {}
+	item_speed_effects[name] = def.affects_item_speed
 end
 
 mcl_potions.register_effect({
@@ -817,16 +830,68 @@ mcl_potions.register_effect({
 	uses_factor = true,
 })
 
+-- constants relevant for effects altering mining and attack speed
+local LONGEST_MINING_TIME = 300
+local LONGEST_PUNCH_INTERVAL = 10
+mcl_potions.LONGEST_MINING_TIME = LONGEST_MINING_TIME
+mcl_potions.LONGEST_PUNCH_INTERVAL = LONGEST_PUNCH_INTERVAL
+
+function mcl_potions.apply_haste_fatigue(toolcaps, h_fac, f_fac)
+	if f_fac == 0 then
+		local fpi = toolcaps.full_punch_interval
+		toolcaps.full_punch_interval = fpi > LONGEST_PUNCH_INTERVAL and fpi or LONGEST_PUNCH_INTERVAL
+	else
+		toolcaps.full_punch_interval = toolcaps.full_punch_interval / (1+h_fac) / f_fac
+	end
+	for name, group in pairs(toolcaps.groupcaps) do
+		local t = group.times
+		for i=1, #t do
+			if f_fac == 0 then
+				t[i] = t[i] > LONGEST_MINING_TIME and t[i] or LONGEST_MINING_TIME
+			else
+				local old_time = t[i]
+				t[i] = t[i] / (1+h_fac) / f_fac
+				if old_time < LONGEST_MINING_TIME and t[i] > LONGEST_MINING_TIME then
+					t[i] = LONGEST_MINING_TIME
+				end
+			end
+		end
+	end
+	return toolcaps
+end
+
+function mcl_potions.hf_update_internal(hand, object)
+	local meta = hand:get_meta()
+	local h_fac = mcl_potions.get_total_haste(object)
+	local f_fac = mcl_potions.get_total_fatigue(object)
+	local toolcaps = hand:get_tool_capabilities()
+	meta:set_tool_capabilities(mcl_potions.apply_haste_fatigue(toolcaps, h_fac, f_fac))
+	return hand
+end
+
+local function haste_fatigue_hand_update(object)
+	local inventory = object:get_inventory()
+	if not inventory or inventory:get_size("hand") < 1 then return end
+	local hand = inventory:get_stack("hand", 1)
+	inventory:set_stack("hand", 1, mcl_potions.hf_update_internal(hand, object))
+end
+
 mcl_potions.register_effect({
 	name = "haste",
 	description = S("Haste"),
 	res_condition = function(object)
 		return (not object:is_player())
 	end,
+	on_start = haste_fatigue_hand_update,
+	after_end = function(object)
+		haste_fatigue_hand_update(object)
+		mcl_potions._reset_haste_fatigue_item_meta(object)
+	end,
 	particle_color = "#FFFF00",
 	uses_factor = true,
 	lvl1_factor = 0.2,
 	lvl2_factor = 0.4,
+	affects_item_speed = {factor_is_positive = true},
 })
 
 mcl_potions.register_effect({
@@ -835,31 +900,27 @@ mcl_potions.register_effect({
 	res_condition = function(object)
 		return (not object:is_player())
 	end,
+	on_start = haste_fatigue_hand_update,
+	after_end = function(object)
+		haste_fatigue_hand_update(object)
+		mcl_potions._reset_haste_fatigue_item_meta(object)
+	end,
 	particle_color = "#64643D",
 	uses_factor = true,
 	lvl1_factor = 0.3,
 	lvl2_factor = 0.09,
+	affects_item_speed = {},
 })
 
 -- implementation of haste and fatigue effects
-local LONGEST_MINING_TIME = 300
-local LONGEST_PUNCH_INTERVAL = 10
 function mcl_potions.update_haste_and_fatigue(player)
 	if mcl_gamemode.get_gamemode(player) == "creative" then return end
 	local item = player:get_wielded_item()
 	local meta = item:get_meta()
-	local haste = EF.haste[player]
-	local fatigue = EF.fatigue[player]
 	local item_haste = meta:get_float("mcl_potions:haste")
 	local item_fatig = 1 - meta:get_float("mcl_potions:fatigue")
-	local h_fac
-	if haste then h_fac = haste.factor
-	else h_fac = 0 end
-	if h_fac < 0 then h_fac = 0 end
-	local f_fac
-	if fatigue then f_fac = fatigue.factor
-	else f_fac = 1 end
-	if f_fac < 0 then f_fac = 0 end
+	local h_fac = mcl_potions.get_total_haste(player)
+	local f_fac = mcl_potions.get_total_fatigue(player)
 	if item_haste ~= h_fac or item_fatig ~= f_fac then
 		if h_fac ~= 0 then meta:set_float("mcl_potions:haste", h_fac)
 		else meta:set_string("mcl_potions:haste", "") end
@@ -872,37 +933,20 @@ function mcl_potions.update_haste_and_fatigue(player)
 			return
 		end
 		local toolcaps = item:get_tool_capabilities()
-		if f_fac == 0 then
-			local fpi = toolcaps.full_punch_interval
-			toolcaps.full_punch_interval = fpi > LONGEST_PUNCH_INTERVAL and fpi or LONGEST_PUNCH_INTERVAL
-		else
-			toolcaps.full_punch_interval = toolcaps.full_punch_interval / (1+h_fac) / f_fac
-		end
-		for name, group in pairs(toolcaps.groupcaps) do
-			local t = group.times
-			for i=1, #t do
-				if f_fac == 0 then
-					t[i] = t[i] > LONGEST_MINING_TIME and t[i] or LONGEST_MINING_TIME
-				else
-					local old_time = t[i]
-					t[i] = t[i] / (1+h_fac) / f_fac
-					if old_time < LONGEST_MINING_TIME and t[i] > LONGEST_MINING_TIME then
-						t[i] = LONGEST_MINING_TIME
-					end
-				end
-			end
-		end
-		meta:set_tool_capabilities(toolcaps)
+		meta:set_tool_capabilities(mcl_potions.apply_haste_fatigue(toolcaps, h_fac, f_fac))
 		player:set_wielded_item(item)
 	end
+	haste_fatigue_hand_update(player, h_fac, f_fac)
 end
 minetest.register_on_punchnode(function(pos, node, puncher, pointed_thing)
 	mcl_potions.update_haste_and_fatigue(puncher)
 end)
 minetest.register_on_punchplayer(function(player, hitter)
+	if not hitter:is_player() then return end -- TODO implement haste and fatigue support for mobs?
 	mcl_potions.update_haste_and_fatigue(hitter)
 end)
 -- update when hitting mob implemented in mcl_mobs/combat.lua
+
 
 
 -- ██╗░░░██╗██████╗░██████╗░░█████╗░████████╗███████╗
@@ -1132,6 +1176,7 @@ minetest.register_globalstep(function(dtime)
 			if not EF[name][object] or EF[name][object].timer >= vals.dur then
 				if effect.on_end then effect.on_end(object) end
 				EF[name][object] = nil
+				if effect.after_end then effect.after_end(object) end
 				if object:is_player() then
 					meta = object:get_meta()
 					meta:set_string("mcl_potions:"..name, minetest.serialize(EF[name][object]))
@@ -1313,6 +1358,31 @@ function mcl_potions.get_effect_level(object, effect_name)
 	if not effect then return 0 end
 	if not registered_effects[effect_name].uses_factor then return 1 end
 	return registered_effects[effect_name].factor_to_level(effect.factor)
+end
+
+function mcl_potions.get_total_haste(object)
+	local accum_factor = 1
+	for name, def in pairs(item_speed_effects) do
+		if EF[name][object] then
+			local factor = EF[name][object].factor
+			if def.factor_is_positive then factor = factor + 1 end
+			if factor > 1 then accum_factor = accum_factor * factor end
+		end
+	end
+	return accum_factor - 1
+end
+
+function mcl_potions.get_total_fatigue(object)
+	local accum_factor = 1
+	for name, def in pairs(item_speed_effects) do
+		if EF[name][object] then
+			local factor = EF[name][object].factor
+			if def.factor_is_positive then factor = factor + 1 end
+			if factor <= 0 then return 0 end
+			if factor < 1 then accum_factor = accum_factor * factor end
+		end
+	end
+	return accum_factor
 end
 
 function mcl_potions.clear_effect(object, effect)
