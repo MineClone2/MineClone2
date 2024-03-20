@@ -912,6 +912,40 @@ mcl_potions.register_effect({
 	affects_item_speed = {},
 })
 
+mcl_potions.register_effect({
+	name = "conduit_power",
+	description = S("Conduit Power"),
+	res_condition = function(object)
+		return (not object:is_player())
+	end,
+	on_start = haste_fatigue_hand_update,
+	on_step = function(dtime, object, factor, duration)
+		if not object:is_player() then return end
+		local node = minetest.get_node_or_nil(object:get_pos())
+		if node and minetest.registered_nodes[node.name]
+			and minetest.get_item_group(node.name, "liquid") ~= 0
+			and minetest.get_item_group(node.name, "water") ~= 0 then
+				EF.conduit_power[object].blocked = nil
+				if object:get_breath() then
+					hb.hide_hudbar(object, "breath")
+					if object:get_breath() < 10 then object:set_breath(10) end
+				end
+				-- TODO implement improved underwater vision with this effect
+		else
+			EF.conduit_power[object].blocked = true
+		end
+	end,
+	after_end = function(object)
+		haste_fatigue_hand_update(object)
+		mcl_potions._reset_haste_fatigue_item_meta(object)
+	end,
+	particle_color = "#1FB1BA",
+	uses_factor = true,
+	lvl1_factor = 0.2,
+	lvl2_factor = 0.4,
+	affects_item_speed = {factor_is_positive = true},
+})
+
 -- implementation of haste and fatigue effects
 function mcl_potions.update_haste_and_fatigue(player)
 	if mcl_gamemode.get_gamemode(player) == "creative" then return end
@@ -1363,7 +1397,7 @@ end
 function mcl_potions.get_total_haste(object)
 	local accum_factor = 1
 	for name, def in pairs(item_speed_effects) do
-		if EF[name][object] then
+		if EF[name][object] and not EF[name][object].blocked then
 			local factor = EF[name][object].factor
 			if def.factor_is_positive then factor = factor + 1 end
 			if factor > 1 then accum_factor = accum_factor * factor end
@@ -1375,7 +1409,7 @@ end
 function mcl_potions.get_total_fatigue(object)
 	local accum_factor = 1
 	for name, def in pairs(item_speed_effects) do
-		if EF[name][object] then
+		if EF[name][object] and not EF[name][object].blocked then
 			local factor = EF[name][object].factor
 			if def.factor_is_positive then factor = factor + 1 end
 			if factor <= 0 then return 0 end
