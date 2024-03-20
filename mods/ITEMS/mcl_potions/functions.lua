@@ -861,6 +861,7 @@ function mcl_potions.apply_haste_fatigue(toolcaps, h_fac, f_fac)
 end
 
 function mcl_potions.hf_update_internal(hand, object)
+	-- TODO add a check for creative mode?
 	local meta = hand:get_meta()
 	local h_fac = mcl_potions.get_total_haste(object)
 	local f_fac = mcl_potions.get_total_fatigue(object)
@@ -879,6 +880,9 @@ end
 mcl_potions.register_effect({
 	name = "haste",
 	description = S("Haste"),
+	get_tt = function(factor)
+		return S("+@1% mining and attack speed", math.floor(factor*100))
+	end,
 	res_condition = function(object)
 		return (not object:is_player())
 	end,
@@ -897,6 +901,9 @@ mcl_potions.register_effect({
 mcl_potions.register_effect({
 	name = "fatigue",
 	description = S("Fatigue"),
+	get_tt = function(factor)
+		return S("-@1% mining and attack speed", math.floor((1-factor)*100))
+	end,
 	res_condition = function(object)
 		return (not object:is_player())
 	end,
@@ -915,6 +922,9 @@ mcl_potions.register_effect({
 mcl_potions.register_effect({
 	name = "conduit_power",
 	description = S("Conduit Power"),
+	get_tt = function(factor)
+		return S("+@1% mining and attack speed in water\nlimitless breathing under water", math.floor(factor*100))
+	end,
 	res_condition = function(object)
 		return (not object:is_player())
 	end,
