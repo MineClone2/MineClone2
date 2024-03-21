@@ -603,6 +603,38 @@ mcl_potions.register_effect({
 })
 
 mcl_potions.register_effect({
+	name = "luck",
+	description = S("Luck"),
+	particle_color = "#7BFF42",
+	res_condition = function(object)
+		return (not object:is_player())
+	end,
+	on_start = function(object, factor)
+-- 		mcl_luck.add_luck_modifier(object, "mcl_potions:luck", factor)
+	end,
+	on_end = function(object)
+-- 		mcl_luck.remove_luck_modifier(object, "mcl_potions:luck")
+	end,
+	uses_factor = true,
+})
+
+mcl_potions.register_effect({
+	name = "bad_luck",
+	description = S("Bad Luck"),
+	particle_color = "#887343",
+	res_condition = function(object)
+		return (not object:is_player())
+	end,
+	on_start = function(object, factor)
+-- 		mcl_luck.add_luck_modifier(object, "mcl_potions:bad_luck", -factor)
+	end,
+	on_end = function(object)
+-- 		mcl_luck.remove_luck_modifier(object, "mcl_potions:bad_luck")
+	end,
+	uses_factor = true,
+})
+
+mcl_potions.register_effect({
 	name = "bad_omen",
 	description = S("Bad Omen"),
 	particle_color = "#472331",
