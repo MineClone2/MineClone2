@@ -270,10 +270,10 @@ controls.register_on_release(function(player, key, time)
 		local is_critical = false
 		if charge >= BOW_CHARGE_TIME_FULL then
 			speed = BOW_MAX_SPEED
-			local r = math.random(1,5)
-			if r == 1 then
-				-- 20% chance for critical hit
-				damage = 10
+			local r = math.random(1,5) + mcl_luck.get_luck(player:get_player_name())
+			if r > 4 then
+				-- 20% chance for critical hit (by default)
+				damage = 10 + math.floor((r-5)/5) -- mega crit (over crit) with high luck
 				is_critical = true
 			else
 				damage = 9
