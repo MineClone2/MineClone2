@@ -610,10 +610,13 @@ mcl_potions.register_effect({
 		return (not object:is_player())
 	end,
 	on_start = function(object, factor)
--- 		mcl_luck.add_luck_modifier(object, "mcl_potions:luck", factor)
+		mcl_luck.apply_luck_modifier(object:get_player_name(), "mcl_potions:luck", factor)
+	end,
+	on_load = function(object, factor)
+		mcl_luck.apply_luck_modifier(object:get_player_name(), "mcl_potions:luck", factor)
 	end,
 	on_end = function(object)
--- 		mcl_luck.remove_luck_modifier(object, "mcl_potions:luck")
+		mcl_luck.remove_luck_modifier(object:get_player_name(), "mcl_potions:luck")
 	end,
 	uses_factor = true,
 })
@@ -626,10 +629,13 @@ mcl_potions.register_effect({
 		return (not object:is_player())
 	end,
 	on_start = function(object, factor)
--- 		mcl_luck.add_luck_modifier(object, "mcl_potions:bad_luck", -factor)
+		mcl_luck.apply_luck_modifier(object:get_player_name(), "mcl_potions:bad_luck", -factor)
+	end,
+	on_load = function(object, factor)
+		mcl_luck.apply_luck_modifier(object:get_player_name(), "mcl_potions:bad_luck", -factor)
 	end,
 	on_end = function(object)
--- 		mcl_luck.remove_luck_modifier(object, "mcl_potions:bad_luck")
+		mcl_luck.remove_luck_modifier(object:get_player_name(), "mcl_potions:bad_luck")
 	end,
 	uses_factor = true,
 })
