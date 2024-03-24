@@ -28,8 +28,8 @@ minetest.register_entity("mcl_end:ender_eye", {
 		self._age = self._age + dtime
 		if self._age >= 3 then
 			-- End of life
-			local r = math.random(1,5)
-			if r == 1 then
+			local r = math.random(1,15) + self._luck
+			if r <= 3 then
 				-- 20% chance to get destroyed completely.
 				-- 100% if in Creative Mode
 				self.object:remove()
@@ -85,11 +85,12 @@ minetest.register_craftitem("mcl_end:ender_eye", {
 		if user == nil then
 			return
 		end
+		local player_name = user:get_player_name()
 		local origin = user:get_pos()
 		origin.y = origin.y + 1.5
 		local strongholds = mcl_structures.registered_structures["end_shrine"].static_pos
 		local dim = mcl_worlds.pos_to_dimension(origin)
-		local is_creative = minetest.is_creative_enabled(user:get_player_name())
+		local is_creative = minetest.is_creative_enabled(player_name)
 
 		-- Just drop the eye of ender if there are no strongholds
 		if #strongholds <= 0 or dim ~= "overworld" then
@@ -124,6 +125,8 @@ minetest.register_craftitem("mcl_end:ender_eye", {
 		-- Throw it!
 		local obj = minetest.add_entity(origin, "mcl_end:ender_eye")
 		local dir
+		local ent = obj:get_luaentity()
+		ent._luck = mcl_luck.get_luck(player_name)
 
 		if lowest_dist <= 25 then
 			local velocity = 4
