@@ -17,21 +17,18 @@ function mcl_throwing.register_throwable_object(name, entity, velocity)
 end
 
 function mcl_throwing.throw(throw_item, pos, dir, velocity, thrower)
-	if velocity == nil then
-		velocity = velocities[throw_item]
-	end
-	if velocity == nil then
-		velocity = 22
-	end
+	velocity = velocity or velocities[throw_item] or 22
 	minetest.sound_play("mcl_throwing_throw", {pos=pos, gain=0.4, max_hear_distance=16}, true)
 
 	local itemstring = ItemStack(throw_item):get_name()
-	local obj = minetest.add_entity(pos, entity_mapping[itemstring])
-	obj:set_velocity({x=dir.x*velocity, y=dir.y*velocity, z=dir.z*velocity})
-	obj:set_acceleration({x=dir.x*-3, y=-GRAVITY, z=dir.z*-3})
-	if thrower then
-		obj:get_luaentity()._thrower = thrower
-	end
+	local obj = vl_projectile.create(entity_mapping[itemstring], {
+		pos = pos,
+		owner = thrower,
+		dir = dir,
+		velocity = velocity,
+		drag = 3,
+	})
+	obj:get_luaentity()._thrower = thrower
 	return obj
 end
 
@@ -71,6 +68,7 @@ end
 
 function mcl_throwing.on_activate(self, staticdata, dtime_s)
 	local data = minetest.deserialize(staticdata)
+	self._staticdata = data
 	if data then
 		self._lastpos = data._lastpos
 		self._thrower = data._thrower
