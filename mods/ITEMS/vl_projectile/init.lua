@@ -78,11 +78,6 @@ local function handle_entity_collision(self, entity_def, projectile_def, entity)
 		entity:punch(self.object, 1.0, projectile_def.tool or { full_punch_interval = 1.0, damage_groups = dmg }, dir )
 	end
 
-	-- Normally objects should be removed on collision with entities
-	if not projectile_def.survive_collision then
-		self.object:remove()
-	end
-
 	-- Call entity collied hook
 	(projectile_def.on_collide_with_entity or no_op)(self, pos, entity)
 
@@ -100,6 +95,13 @@ local function handle_entity_collision(self, entity_def, projectile_def, entity)
 		arg2.pos = pos
 		minetest.sound_play(sound[1], arg2, sound[3])
 	end
+
+	-- Normally objects should be removed on collision with entities
+	if not projectile_def.survive_collision then
+		self.object:remove()
+	end
+
+	return true
 end
 
 function mod.collides_with_entities(self, dtime, entity_def, projectile_def)
