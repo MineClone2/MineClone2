@@ -497,7 +497,7 @@ mcl_mobs.register_mob("mobs_mc:rover", {
 minetest.register_entity("mobs_mc:enderman", {
 	on_activate = function(self, staticdata, dtime)
 		minetest.add_entity(self.object:get_pos(), "mobs_mc:rover", staticdata)
-		obj:set_properties({
+		self.object:set_properties({
 			mesh = "vl_rover.b3d",
 			textures = { "vl_mobs_rover.png^vl_mobs_rover_face.png" },
 			visual_size = {x=10, y=10},

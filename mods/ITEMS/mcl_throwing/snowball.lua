@@ -40,7 +40,7 @@ local function snowball_particles(pos, vel)
 		texture = "weather_pack_snow_snowflake"..math.random(1,2)..".png",
 	})
 end
-minetest.register_entity("mcl_throwing:snowball_entity", {
+vl_projectile.register("mcl_throwing:snowball_entity", {
 	physical = false,
 	timer=0,
 	textures = {"mcl_throwing_snowball.png"},
@@ -50,10 +50,6 @@ minetest.register_entity("mcl_throwing:snowball_entity", {
 
 	get_staticdata = mcl_throwing.get_staticdata,
 	on_activate = mcl_throwing.on_activate,
-
-	on_step = vl_projectile.update_projectile,
-	_thrower = nil,
-	_lastpos = nil,
 	_vl_projectile = {
 		behaviors = {
 			vl_projectile.collides_with_solids,
