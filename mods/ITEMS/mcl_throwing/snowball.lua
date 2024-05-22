@@ -50,9 +50,10 @@ minetest.register_entity("mcl_throwing:snowball_entity", {
 
 	get_staticdata = mcl_throwing.get_staticdata,
 	on_activate = mcl_throwing.on_activate,
+
+	on_step = vl_projectile.update_projectile,
 	_thrower = nil,
 	_lastpos = nil,
-
 	_vl_projectile = {
 		behaviors = {
 			vl_projectile.collides_with_solids,
@@ -74,6 +75,5 @@ minetest.register_entity("mcl_throwing:snowball_entity", {
 		},
 		damage_groups = { snowball_vulnerable = 3 },
 	},
-	on_step = vl_projectile.update_projectile,
 })
 

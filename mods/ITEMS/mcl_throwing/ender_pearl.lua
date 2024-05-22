@@ -34,6 +34,7 @@ minetest.register_entity("mcl_throwing:ender_pearl_entity",{
 	get_staticdata = mcl_throwing.get_staticdata,
 	on_activate = mcl_throwing.on_activate,
 
+	on_step = vl_projectile.update_projectile,
 	_lastpos={},
 	_thrower = nil,		-- Player ObjectRef of the player who threw the ender pearl
 	_vl_projectile = {
@@ -127,6 +128,4 @@ minetest.register_entity("mcl_throwing:ender_pearl_entity",{
 			end
 		end
 	},
-
-	on_step = vl_projectile.update_projectile,
 })

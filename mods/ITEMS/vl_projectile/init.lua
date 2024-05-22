@@ -109,6 +109,7 @@ function mod.collides_with_entities(self, dtime, entity_def, projectile_def)
 	local dmg = projectile_def.damage_groups or 0
 
 	local hit = nil
+	local owner = self._vl_projectile.owner
 
 	local objects = minetest.get_objects_inside_radius(pos, 1.5)
 	for i = 1,#objects do
@@ -116,9 +117,9 @@ function mod.collides_with_entities(self, dtime, entity_def, projectile_def)
 		local entity = object:get_luaentity()
 
 		if entity and entity.name ~= self.object:get_luaentity().name then
-			if object:is_player() and self._thrower ~= object:get_player_name() then
+			if object:is_player() and owner ~= object:get_player_name() then
 				return handle_entity_collision(self, entity_def, projectile_def, object)
-			elseif (entity.is_mob == true or entity._hittable_by_projectile) and (self._thrower ~= object) then
+			elseif (entity.is_mob == true or entity._hittable_by_projectile) and (owner ~= object) then
 				return handle_entity_collision(self, entity_def, projectile_def, object)
 			end
 		end
