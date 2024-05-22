@@ -450,4 +450,13 @@ function mcl_util.get_colorwallmounted_rotation(pos)
 	end
 end
 
+function mcl_util.match_node_to_filter(node_name, filters)
+	for i = 1,#filters do
+		local filter = filters[i]
+		if node_name == filter then return true end
 
+		if string.sub(filter,1,6) == "group:" and minetest.get_item_group(node_name, string.sub(filter,7)) ~= 0 then return true end
+	end
+
+	return false
+end
