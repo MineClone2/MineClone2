@@ -56,26 +56,6 @@ S("Arrows might get stuck on solid blocks and can be retrieved again. They are a
 	end,
 })
 
-local function damage_particles(pos, is_critical)
-	if is_critical then
-		minetest.add_particlespawner({
-			amount = 15,
-			time = 0.1,
-			minpos = vector.offset(pos, -0.5, -0.5, -0.5),
-			maxpos = vector.offset(pos, 0.5, 0.5, 0.5),
-			minvel = vector.new(-0.1, -0.1, -0.1),
-			maxvel = vector.new(0.1, 0.1, 0.1),
-			minexptime = 1,
-			maxexptime = 2,
-			minsize = 1.5,
-			maxsize = 1.5,
-			collisiondetection = false,
-			vertical = false,
-			texture = "mcl_particles_crit.png^[colorize:#bc7a57:127",
-		})
-	end
-end
-
 -- Destroy arrow entity self at pos and drops it as an item
 local function spawn_item(self, pos)
 	if not minetest.is_creative_enabled("") then
@@ -165,9 +145,28 @@ vl_projectile.register("mcl_bows:arrow_entity", {
 
 	_vl_projectile = {
 		survive_collision = true,
+		sticks_in_players = true,
+		damage_groups = function(self)
+			return { fleshy = self._damage }
+		end,
 		behaviors = {
-			vl_projectile.raycast_collides_with_entities,
 			vl_projectile.collides_with_solids,
+			vl_projectile.raycast_collides_with_entities,
+		},
+		allow_punching = function(self, entity_def, projectile_def, entity)
+			local lua = entity:get_luaentity()
+			if lua and lua.name == "mobs_mc:rover" then return false end
+
+			return true
+		end,
+		sounds = {
+			on_entity_collision = function(self, _, _, obj)
+				if obj:is_player() then
+					return {{name="mcl_bows_hit_player", gain=0.1}, {to_player=self._shooter:get_player_name()}, true}
+				end
+
+				return {{name="mcl_bows_hit_other", gain=0.3}, {pos=self.object:get_pos(), max_hear_distance=16}, true}
+			end
 		},
 		on_collide_with_solid = function(self, pos, node, node_def)
 			local def = node_def
@@ -252,6 +251,7 @@ vl_projectile.register("mcl_bows:arrow_entity", {
 
 			if obj:get_hp() > 0 then
 				-- Check if there is no solid node between arrow and object
+				-- TODO: remove. this code should never occur if vl_projectile is working correctly
 				local ray = minetest.raycast(self.object:get_pos(), obj:get_pos(), true)
 				for pointed_thing in ray do
 					if pointed_thing.type == "object" and pointed_thing.ref == obj then
@@ -269,78 +269,6 @@ vl_projectile.register("mcl_bows:arrow_entity", {
 					end
 				end
 
-				-- Punch target object but avoid hurting enderman.
-				if not lua or lua.name ~= "mobs_mc:rover" then
-					if not self._in_player then
-						damage_particles(vector.add(pos, vector.multiply(self.object:get_velocity(), 0.1)), self._is_critical)
-					end
-					if mcl_burning.is_burning(self.object) then
-						mcl_burning.set_on_fire(obj, 5)
-					end
-					if not self._in_player and not self._blocked then
-						obj:punch(self.object, 1.0, {
-							full_punch_interval=1.0,
-							damage_groups={fleshy=self._damage},
-						}, self.object:get_velocity())
-
-						if obj:is_player() then
-							if not mcl_shields.is_blocking(obj) then
-								local placement
-								self._placement = math.random(1, 2)
-								if self._placement == 1 then
-									placement = "front"
-								else
-									placement = "back"
-								end
-								self._in_player = true
-								if self._placement == 2 then
-									self._rotation_station = 90
-								else
-									self._rotation_station = -90
-								end
-								self._y_position = random_arrow_positions("y", placement)
-								self._x_position = random_arrow_positions("x", placement)
-								if self._y_position > 6 and self._x_position < 2 and self._x_position > -2 then
-									self._attach_parent = "Head"
-									self._y_position = self._y_position - 6
-								elseif self._x_position > 2 then
-									self._attach_parent = "Arm_Right"
-									self._y_position = self._y_position - 3
-									self._x_position = self._x_position - 2
-								elseif self._x_position < -2 then
-									self._attach_parent = "Arm_Left"
-									self._y_position = self._y_position - 3
-									self._x_position = self._x_position + 2
-								else
-									self._attach_parent = "Body"
-								end
-								self._z_rotation = math.random(-30, 30)
-								self._y_rotation = math.random( -30, 30)
-								self.object:set_attach(
-									obj, self._attach_parent,
-									vector.new(self._x_position, self._y_position, random_arrow_positions("z", placement)),
-									vector.new(0, self._rotation_station + self._y_rotation, self._z_rotation)
-								)
-							else
-								self._blocked = true
-								self.object:set_velocity(vector.multiply(self.object:get_velocity(), -0.25))
-							end
-							minetest.after(150, function()
-								self.object:remove()
-							end)
-						else
-							self.object:remove()
-						end
-					end
-				end
-
-				if is_player then
-					if self._shooter and self._shooter:is_player() and not self._in_player and not self._blocked then
-						-- “Ding” sound for hitting another player
-						minetest.sound_play({name="mcl_bows_hit_player", gain=0.1}, {to_player=self._shooter:get_player_name()}, true)
-					end
-				end
-
 				if lua then
 					local entity_name = lua.name
 					-- Achievement for hitting skeleton, wither skeleton or stray (TODO) with an arrow at least 50 meters away
@@ -351,9 +279,6 @@ vl_projectile.register("mcl_bows:arrow_entity", {
 							awards.unlock(self._shooter:get_player_name(), "mcl:snipeSkeleton")
 						end
 					end
-				end
-				if not self._in_player and not self._blocked then
-					minetest.sound_play({name="mcl_bows_hit_other", gain=0.3}, {pos=self.object:get_pos(), max_hear_distance=16}, true)
 				end
 			end
 
@@ -374,8 +299,8 @@ vl_projectile.register("mcl_bows:arrow_entity", {
 		self._time_in_air = self._time_in_air + dtime
 
 		local pos = self.object:get_pos()
-		local dpos = vector.round(vector.new(pos)) -- digital pos
-		local node = minetest.get_node(dpos)
+		--local dpos = vector.round(vector.new(pos)) -- digital pos
+		--local node = minetest.get_node(dpos)
 
 		if self._stuck then
 			return stuck_arrow_on_step(self, dtime)
@@ -407,6 +332,7 @@ vl_projectile.register("mcl_bows:arrow_entity", {
 		end
 
 		-- TODO: change to use vl_physics
+		-- TODO: move to vl_projectile
 		local def = minetest.registered_nodes[minetest.get_node(pos).name]
 		if def and def.liquidtype ~= "none" then
 			-- Slow down arrow in liquids

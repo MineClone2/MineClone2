@@ -2,6 +2,7 @@ local mod = {}
 vl_projectile = mod
 
 local GRAVITY = tonumber(minetest.settings:get("movement_gravity"))
+local enable_pvp = minetest.settings:get_bool("enable_pvp")
 
 function mod.update_projectile(self, dtime)
 	local entity_name = self.name
@@ -23,8 +24,38 @@ end
 
 local function no_op()
 end
-
-local enable_pvp = minetest.settings:get_bool("enable_pvp")
+local function damage_particles(pos, is_critical)
+	if is_critical then
+		minetest.add_particlespawner({
+			amount = 15,
+			time = 0.1,
+			minpos = vector.offset(pos, -0.5, -0.5, -0.5),
+			maxpos = vector.offset(pos, 0.5, 0.5, 0.5),
+			minvel = vector.new(-0.1, -0.1, -0.1),
+			maxvel = vector.new(0.1, 0.1, 0.1),
+			minexptime = 1,
+			maxexptime = 2,
+			minsize = 1.5,
+			maxsize = 1.5,
+			collisiondetection = false,
+			vertical = false,
+			texture = "mcl_particles_crit.png^[colorize:#bc7a57:127",
+		})
+	end
+end
+local function random_hit_positions(positions, placement)
+	if positions == "x" then
+		return math.random(-4, 4)
+	elseif positions == "y" then
+		return math.random(0, 10)
+	end
+	if placement == "front" and positions == "z" then
+		return 3
+	elseif placement == "back" and positions == "z" then
+		return -3
+	end
+	return 0
+end
 local function check_hitpoint(hitpoint)
 	if hitpoint.type ~= "object" then return false end
 
@@ -40,6 +71,59 @@ local function check_hitpoint(hitpoint)
 	end
 
 	return false
+end
+local function handle_player_sticking(self, entity_def, projectile_def, entity)
+	if self._in_player or self._blocked then return end
+	if not projectile_def.sticks_in_players then return end
+
+	minetest.after(150, function()
+		self.object:remove()
+	end)
+
+	-- Handle blocking projectiles
+	if mcl_shields.is_blocking(obj) then
+		self._blocked = true
+		self.object:set_velocity(vector.multiply(self.object:get_velocity(), -0.25))
+		return
+	end
+
+	-- Handle when the projectile hits the player
+	local placement
+	self._placement = math.random(1, 2)
+	if self._placement == 1 then
+		placement = "front"
+	else
+		placement = "back"
+	end
+	self._in_player = true
+	if self._placement == 2 then
+		self._rotation_station = 90
+	else
+		self._rotation_station = -90
+	end
+	self._y_position = random_arrow_positions("y", placement)
+	self._x_position = random_arrow_positions("x", placement)
+	if self._y_position > 6 and self._x_position < 2 and self._x_position > -2 then
+		self._attach_parent = "Head"
+		self._y_position = self._y_position - 6
+	elseif self._x_position > 2 then
+		self._attach_parent = "Arm_Right"
+		self._y_position = self._y_position - 3
+		self._x_position = self._x_position - 2
+	elseif self._x_position < -2 then
+		self._attach_parent = "Arm_Left"
+		self._y_position = self._y_position - 3
+		self._x_position = self._x_position + 2
+	else
+		self._attach_parent = "Body"
+	end
+	self._z_rotation = math.random(-30, 30)
+	self._y_rotation = math.random( -30, 30)
+	self.object:set_attach(
+		obj, self._attach_parent,
+		vector.new(self._x_position, self._y_position, random_arrow_positions("z", placement)),
+		vector.new(0, self._rotation_station + self._y_rotation, self._z_rotation)
+	)
 end
 
 function mod.collides_with_solids(self, dtime, entity_def, projectile_def)
@@ -102,16 +186,51 @@ local function handle_entity_collision(self, entity_def, projectile_def, entity)
 	local dir = vector.normalize(self.object:get_velocity())
 	local self_vl_projectile = self._vl_projectile
 
-	if entity:is_player() and projectile_def.hits_players and self_vl_projectile.owner ~= hit:get_player_name() then
-		entity:punch(self.object, 1.0, projectile_def.tool or { full_punch_interval = 1.0, damage_groups = dmg }, dir )
-	elseif (entity.is_mob == true or entity._hittable_by_projectile) and (self_vl_projectile.owner ~= entity) then
-		entity:punch(self.object, 1.0, projectile_def.tool or { full_punch_interval = 1.0, damage_groups = dmg }, dir )
+	-- Allow punching
+	local allow_punching = projectile_def.allow_punching or true
+	if type(allow_punching) == "function" then
+		allow_punching = allow_punching(self, entity_def, projectile_def, entity)
+	end
+	print("allow_punching="..tostring(allow_punching))
+
+	if allow_punching then
+		-- Get damage
+		local dmg = projectile_def.damage_groups or 0
+		if type(dmg) == "function" then
+			dmg = dmg(self, entity_def, projectile_def, entity)
+		end
+
+		local entity_lua = entity:get_luaentity()
+
+		-- Apply damage
+		-- Note: Damage blocking for shields is handled in mcl_shields with an mcl_damage modifier
+		local do_damage = false
+		if entity:is_player() and projectile_def.hits_players and self_vl_projectile.owner ~= hit:get_player_name() then
+			do_damage = true
+
+			handle_player_sticking(self, entity_def, projectile_def, entity)
+		elseif entity_lua and (entity_lua.is_mob == true or entity_lua._hittable_by_projectile) and (self_vl_projectile.owner ~= entity) then
+			do_damage = true
+			entity:punch(self.object, 1.0, projectile_def.tool or { full_punch_interval = 1.0, damage_groups = dmg }, dir )
+		end
+
+		if do_damage then
+			entity:punch(self.object, 1.0, projectile_def.tool or { full_punch_interval = 1.0, damage_groups = dmg }, dir )
+
+			-- Indicate damage
+			damage_particles(vector.add(pos, vector.multiply(self.object:get_velocity(), 0.1)), self._is_critical)
+
+			-- Light things on fire
+			if mcl_burning.is_burning(self.object) then
+				mcl_burning.set_on_fire(obj, 5)
+			end
+		end
 	end
 
-	-- Call entity collied hook
+	-- Call entity collision hook
 	(projectile_def.on_collide_with_entity or no_op)(self, pos, entity)
 
-	-- Call entity reverse hook
+	-- Call reverse entity collision hook
 	local other_entity_def = minetest.registered_entities[entity.name] or {}
 	local other_entity_vl_projectile = other_entity_def._vl_projectile or {}
 	local hook = (other_entity_vl_projectile or {}).on_collide or no_op
@@ -120,7 +239,8 @@ local function handle_entity_collision(self, entity_def, projectile_def, entity)
 	-- Play sounds
 	local sounds = (projectile_def.sounds or {})
 	local sound = sounds.on_entity_collide or sounds.on_collision
-	if on_collide_sound then
+	if type(sound) == "function" then sound = sound(self, entity_def, projectile_def, entity)
+	if sound then
 		local arg2 = table.copy(sound[2])
 		arg2.pos = pos
 		minetest.sound_play(sound[1], arg2, sound[3])
@@ -136,7 +256,6 @@ end
 
 function mod.collides_with_entities(self, dtime, entity_def, projectile_def)
 	local pos = self.object:get_pos()
-	local dmg = projectile_def.damage_groups or 0
 
 	local hit = nil
 	local owner = self._vl_projectile.owner
