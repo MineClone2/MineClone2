@@ -33,7 +33,7 @@ minetest.register_node("mcl_blackstone:blackstone_gilded", {
 			{items = {"mcl_blackstone:blackstone_gilded"}, rarity = 1},
 		}
 	},
-	_mcl_blast_resistance = 2,
+	_mcl_blast_resistance = 6,
 	_mcl_hardness = 1.5,
 	_mcl_silk_touch_drop = true,
 	_mcl_fortune_drop = {
