@@ -14,7 +14,7 @@ function mcl_burning.is_burning(obj)
 end
 
 function mcl_burning.is_affected_by_rain(obj)
-	return mcl_weather.get_weather() == "rain" and mcl_weather.is_outdoor(obj:get_pos())
+	return mcl_weather.rain.raining and mcl_weather.is_outdoor(obj:get_pos())
 end
 
 function mcl_burning.get_collisionbox(obj, smaller, storage)

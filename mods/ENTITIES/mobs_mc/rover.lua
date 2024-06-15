@@ -157,7 +157,7 @@ mcl_mobs.register_mob("mobs_mc:rover", {
 		local enderpos = self.object:get_pos()
 		local dim = mcl_worlds.pos_to_dimension(enderpos)
 		if dim == "overworld" then
-			if mcl_weather.state == "rain" or mcl_weather.state == "lightning" then
+			if mcl_weather.rain.raining then
 				local damage = true
 				local enderpos = self.object:get_pos()
 				enderpos.y = enderpos.y+2.89
