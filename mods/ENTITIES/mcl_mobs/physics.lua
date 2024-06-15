@@ -655,7 +655,6 @@ function mob_class:do_env_damage()
 			if self.armor_list and not self.armor_list.helmet or not self.armor_list or self.armor_list and self.armor_list.helmet and self.armor_list.helmet == "" then
 				if (self.ignited_by_sunlight and (not mcl_weather.rain.raining or not mcl_weather.has_rain(pos))) then
 					if (#mcl_burning.get_touching_nodes(self.object, "group:puts_out_fire", self) == 0) then
-						minetest.log("owow")
 						mcl_burning.set_on_fire(self.object, 10)
 					end
 				else
