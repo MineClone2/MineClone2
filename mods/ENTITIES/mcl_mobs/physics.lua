@@ -653,7 +653,7 @@ function mob_class:do_env_damage()
 		local _, dim = mcl_worlds.y_to_layer(pos.y)
 		if (self.sunlight_damage ~= 0 or self.ignited_by_sunlight) and (sunlight or 0) >= minetest.LIGHT_MAX and dim == "overworld" then
 			if self.armor_list and not self.armor_list.helmet or not self.armor_list or self.armor_list and self.armor_list.helmet and self.armor_list.helmet == "" then
-				if self.ignited_by_sunlight then
+				if (self.ignited_by_sunlight and not mcl_weather.rain.raining) then
 					mcl_burning.set_on_fire(self.object, 10)
 				else
 					self:deal_light_damage(pos, self.sunlight_damage)
