@@ -156,37 +156,15 @@ mcl_mobs.register_mob("mobs_mc:rover", {
 		-- RAIN DAMAGE / EVASIVE WARP BEHAVIOUR HERE.
 		local enderpos = self.object:get_pos()
 		local dim = mcl_worlds.pos_to_dimension(enderpos)
-		if dim == "overworld" then
-			if mcl_weather.rain.raining then
-				local damage = true
-				local enderpos = self.object:get_pos()
-				enderpos.y = enderpos.y+2.89
-				local height = {x=enderpos.x, y=enderpos.y+512,z=enderpos.z}
-				local ray = minetest.raycast(enderpos, height, true)
-				-- Check for blocks above enderman.
-				for pointed_thing in ray do
-					if pointed_thing.type == "node" then
-						local nn = minetest.get_node(minetest.get_pointed_thing_position(pointed_thing)).name
-						local def = minetest.registered_nodes[nn]
-						if (not def) or def.walkable then
-							-- There's a node in the way. Delete arrow without damage
-							damage = false
-							break
-						end
-					end
-				end
-
-				if damage == true then
-					self.state = ""
-					--rain hurts enderman
-					self.object:punch(self.object, 1.0, {
-						full_punch_interval=1.0,
-						damage_groups={fleshy=self._damage},
-					}, nil)
-					--randomly teleport hopefully under something.
-					self:teleport(nil)
-				end
-			end
+		if dim == "overworld" and mcl_burning.is_affected_by_rain(self.object) then
+			self.state = ""
+			--rain hurts enderman
+			self.object:punch(self.object, 1.0, {
+				full_punch_interval=1.0,
+				damage_groups={fleshy=self._damage},
+			}, nil)
+			--randomly teleport hopefully under something.
+			self:teleport(nil)
 		end
 
 		-- AGRESSIVELY WARP/CHASE PLAYER BEHAVIOUR HERE.
