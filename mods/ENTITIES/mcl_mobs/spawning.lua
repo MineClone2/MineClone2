@@ -748,13 +748,20 @@ local function has_room(self,pos)
 		end
 	end
 	table.insert(nodes,"air")
-	local x = cb[4] - cb[1]
-	local y = cb[5] - cb[2]
-	local z = cb[6] - cb[3]
-	local r = math.ceil(x * y * z)
-	local p1 = vector.offset(pos,cb[1],cb[2],cb[3])
-	local p2 = vector.offset(pos,cb[4],cb[5],cb[6])
-	local n = #minetest.find_nodes_in_area(p1,p2,nodes) or 0
+
+	local p1 = vector.offset(pos,cb[1],cb[2] + 1,cb[3])
+	p1.x = math.floor(p1.x)
+	p1.y = math.floor(p1.y)
+	p1.z = math.floor(p1.z)
+
+	local p2 = vector.offset(p1,cb[4] - cb[1], cb[5] - cb[2], cb[6] - cb[3])
+	p2.x = math.floor(p2.x)
+	p2.y = math.floor(p2.y)
+	p2.z = math.floor(p2.z)
+
+	local r = (p2.x - p1.x + 1) * (p2.y - p1.y + 1) * (p2.z - p1.z + 1)
+	local found_nodes = minetest.find_nodes_in_area(p1,p2,nodes)
+	local n = #found_nodes or 0
 	if r > n then
 		minetest.log("warning","[mcl_mobs] No room for mob "..self.name.." at "..minetest.pos_to_string(vector.round(pos)))
 		return false
