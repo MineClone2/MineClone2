@@ -1,6 +1,8 @@
 mcl_util = {}
 
-dofile(minetest.get_modpath(minetest.get_current_modname()).."/roman_numerals.lua")
+local modname = minetest.get_current_modname()
+local modpath = minetest.get_modpath(modname)
+dofile(modpath.."/roman_numerals.lua")
 
 -- Updates all values in t using values from to*.
 function table.update(t, ...)
