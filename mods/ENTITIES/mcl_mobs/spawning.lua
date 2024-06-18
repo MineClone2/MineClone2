@@ -754,19 +754,47 @@ local function has_room(self,pos)
 	p1.y = math.floor(p1.y)
 	p1.z = math.floor(p1.z)
 
-	local p2 = vector.offset(p1,cb[4] - cb[1], cb[5] - cb[2], cb[6] - cb[3])
+	local cb_height = cb[5] - cb[2]
+	local p2 = vector.offset(p1,cb[4] - cb[1], cb_height, cb[6] - cb[3])
 	p2.x = math.floor(p2.x)
 	p2.y = math.floor(p2.y)
 	p2.z = math.floor(p2.z)
 
-	local r = (p2.x - p1.x + 1) * (p2.y - p1.y + 1) * (p2.z - p1.z + 1)
-	local found_nodes = minetest.find_nodes_in_area(p1,p2,nodes)
-	local n = #found_nodes or 0
-	if r > n then
-		minetest.log("warning","[mcl_mobs] No room for mob "..self.name.." at "..minetest.pos_to_string(vector.round(pos)))
-		return false
+	-- Check if the entire spawn volume is free
+	local dx = p2.x - p1.x + 1
+	local dy = p2.y - p1.y + 1
+	local dz = p2.z - p1.z + 1
+	local n = #minetest.find_nodes_in_area(p1,p2,nodes) or 0
+	if n == ( dx * dz * dz ) then return true end
+
+	-- Make sure the entire volume except for the top level is free before checking the top layer
+	if dy > 1 then
+		n = #minetest.find_nodes_in_area(p1, vector.offset(p2, 0, -1, 0), nodes)
+		if n < (dx * dz * ( dy - 1)) then return false end
 	end
-	return true
+
+	-- Check the top layer to see if we have enough space to spawn in
+	local top_layer_height = 1
+	local processed = {}
+	for x = p1.x,p2.x do
+		for z = p1.z,p2.z do
+			local node = minetest.get_node(vector.new(x,p2.y,z)) or { name = "ignore" }
+			if not processed[node.name] then
+				local nodedef = minetest.registered_nodes
+
+				-- TODO: calculate node bounding box and select the lowest y value
+				local lowest_y = 0
+				top_layer_height = math.min(lowest_y, top_layer_height)
+
+				processed[node.name] = true
+			end
+		end
+	end
+	if top_layer_height + dy - 1 >= cb_height then return true end
+
+	-- We don't have room
+	mcl_log("No room for mob "..self.name.." at "..minetest.pos_to_string(vector.round(pos)))
+	return false
 end
 
 mcl_mobs.custom_biomecheck = nil
