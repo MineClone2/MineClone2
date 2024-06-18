@@ -272,6 +272,8 @@ WARNING: BIOME INTEGRATION NEEDED -> How to get biome through lua??
 local spawn_dictionary = {}
 --this is where all of the spawning information  is kept for mobs that don't naturally spawn
 local non_spawn_dictionary = {}
+-- This is a precomputed index of what spawns belong to which spawn groups to accelerate selection of valid mobs for given possitions
+local spawn_dictionary_by_group = {}
 
 function mcl_mobs:spawn_setup(def)
 	if not mobs_spawn then return end
@@ -398,11 +400,8 @@ function mcl_mobs:non_spawn_specific(mob_name,dimension,min_light,max_light)
 end
 
 function mcl_mobs:spawn_specific(name, dimension, type_of_spawning, biomes, min_light, max_light, interval, chance, aoc, min_height, max_height, day_toggle, on_spawn, check_position)
-
 	-- Do mobs spawn at all?
-	if not mobs_spawn then
-		return
-	end
+	if not mobs_spawn then return end
 
 	assert(min_height)
 	assert(max_height)
@@ -425,19 +424,20 @@ function mcl_mobs:spawn_specific(name, dimension, type_of_spawning, biomes, min_
 
 	--load information into the spawn dictionary
 	local key = #spawn_dictionary + 1
-	spawn_dictionary[key]               = {}
-	spawn_dictionary[key]["name"]       = name
-	spawn_dictionary[key]["dimension"]  = dimension
-	spawn_dictionary[key]["type_of_spawning"] = type_of_spawning
-	spawn_dictionary[key]["biomes"]     = biomes
-	spawn_dictionary[key]["min_light"]  = min_light
-	spawn_dictionary[key]["max_light"]  = max_light
-	spawn_dictionary[key]["chance"]     = chance
-	spawn_dictionary[key]["aoc"]        = aoc
-	spawn_dictionary[key]["min_height"] = min_height
-	spawn_dictionary[key]["max_height"] = max_height
-	spawn_dictionary[key]["day_toggle"] = day_toggle
-	spawn_dictionary[key]["check_position"] = check_position
+	spawn_dictionary[key] = {
+		name = name,
+		dimension = dimension,
+		type_of_spawning = type_of_spawning,
+		biomes = biomes,
+		min_light = min_light,
+		max_light = max_light,
+		chance = chance,
+		aoc = aoc,
+		min_height = min_height,
+		max_height = max_height,
+		day_toggle = day_toggle,
+		check_position = check_position,
+	}
 end
 
 -- Calculate the inverse of a piecewise linear function f(x). Line segments are represented as two
@@ -625,8 +625,73 @@ local function get_biome_name(pos)
 	end
 end
 
-local counts = {}
+local biome_groups = {}
+local biome_group_from_name = {}
+local function generate_biome_groups()
+	local remaining_biomes = {}
+	for i = 1,#list_of_all_biomes do
+		remaining_biomes[list_of_all_biomes[i]] = true
+	end
 
+	-- Find the list of biomes that always appear together in spawn definitions
+	local function build_biome_group(biome_name)
+		local biomes = nil
+		for i = 1,#spawn_dictionary do
+			local spawn_def = spawn_dictionary[i]
+			local spawn_def_biomes = spawn_def.biomes
+			if type(spawn_def_biomes) == "table" and table.find(spawn_def_biomes, biome_name) then
+				if not biomes then
+					biomes = table.copy(spawn_def_biomes)
+				else
+					biomes = table.intersect(biomes, spawn_def_biomes)
+				end
+			end
+		end
+
+		return biomes
+	end
+
+	for i = 1,#list_of_all_biomes do
+		-- Select a biome that we haven't already processed
+		local biome_name = list_of_all_biomes[i]
+		if remaining_biomes[biome_name] then
+			local biome_group = build_biome_group(biome_name)
+			if biome_group then
+				table.insert(biome_groups, biome_group)
+
+				-- Make sure that biomes only appear in a single biome group
+				local new_biome_group = {}
+				for j = 1,#biome_group do
+					local biome = biome_group[j]
+					if not biome_group_from_name[biome] then
+						table.insert(new_biome_group, biome)
+					end
+				end
+				biome_group = new_biome_group
+
+				-- Update the index mapping biome's name to biome_group offset and remove from remaining
+				-- biomes list so we don't get duplicate entries
+				for j = 1,#biome_group do
+					local biome = biome_group[j]
+					minetest.log("biome="..biome)
+					assert(not biome_group_from_name[biome])
+					biome_group_from_name[biome] = #biome_groups
+					remaining_biomes[biome] = nil
+				end
+			end
+		end
+	end
+
+	minetest.log("debug="..dump({
+		biome_groups = biome_groups,
+		biome_group_from_name = biome_group_from_name,
+	}))
+end
+
+local function generate_spawn_groups(spawn_def)
+end
+
+local counts = {}
 local function spawn_check(pos, spawn_def)
 	local function log_fail(reason)
 		local count = (counts[reason] or 0) + 1
@@ -1161,6 +1226,15 @@ minetest.register_chatcommand("mobstats",{
 minetest.register_on_mods_loaded(function()
 	for _,def in pairs(minetest.registered_biomes) do
 		table.insert(list_of_all_biomes, def.name)
+	end
+
+	-- Create biome groups
+	generate_biome_groups()
+
+	-- Create spawn groups
+	for i = 1,#spawn_dictionary do
+		local spawn_def = spawn_dictionary[i]
+
 	end
 end)
 
