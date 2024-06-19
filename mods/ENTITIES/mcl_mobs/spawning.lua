@@ -553,17 +553,6 @@ local function get_next_mob_spawn_pos(pos)
 	return spawning_position_list[math_random(1, #spawning_position_list)]
 end
 
---a simple helper function for mob_spawn
-local function biome_check(biome_list, biome_goal)
-	for _, data in pairs(biome_list) do
-		if data == biome_goal then
-			return true
-		end
-	end
-
-	return false
-end
-
 local function is_farm_animal(n)
 	return n == "mobs_mc:pig" or n == "mobs_mc:cow" or n == "mobs_mc:sheep" or n == "mobs_mc:chicken" or n == "mobs_mc:horse" or n == "mobs_mc:donkey"
 end
@@ -717,7 +706,7 @@ local function spawn_check(pos, spawn_def)
 	-- Make sure the biome is correct
 	local biome_name = get_biome_name(pos)
 	if not biome_name then return end
-	if not biome_check(spawn_def.biomes, biome_name) then return log_fail("incorrect biome") end
+	if not table.find(spawn_def.biomes, biome_name) then return log_fail("incorrect biome") end
 
 	-- Never spawn directly on bedrock
 	if gotten_node == "mcl_core:bedrock" then return log_fail("tried to spawn on bedrock") end
