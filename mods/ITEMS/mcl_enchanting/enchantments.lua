@@ -724,7 +724,7 @@ mcl_enchanting.enchantments.soul_speed = {
 mcl_enchanting.enchantments.unbreaking = {
 	name = S("Unbreaking"),
 	max_level = 3,
-	primary = {armor_head = true, armor_torso = true, armor_legs = true, armor_feet = true, pickaxe = true, shovel = true, axe = true, hoe = true, sword = true, fishing_rod = true, bow = true, crossbow = true},
+	primary = {armor_head = true, armor_torso = true, armor_legs = true, armor_feet = true, pickaxe = true, shovel = true, axe = true, hoe = true, fishing_rod = true, weapon = true},
 	secondary = {tool = true},
 	disallow = {non_combat_armor = true},
 	incompatible = {},
