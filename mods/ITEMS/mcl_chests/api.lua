@@ -227,8 +227,6 @@ local function protection_check_put_take(pos, listname, index, stack, player)
 end
 mcl_chests.protection_check_put_take = protection_check_put_take
 
-local trapped_chest_mesecons_rules = mesecon.rules.pplate
-
 -- To be called when a chest is closed (only relevant for trapped chest atm)
 local function chest_update_after_close(pos)
 	local node = minetest.get_node(pos)
@@ -237,25 +235,26 @@ local function chest_update_after_close(pos)
 		minetest.swap_node(pos, { name = "mcl_chests:trapped_chest_small", param2 = node.param2 })
 		find_or_create_entity(pos, "mcl_chests:trapped_chest_small", { "mcl_chests_trapped.png" }, node.param2, false,
 			"default_chest", "mcl_chests_chest", "chest"):reinitialize("mcl_chests:trapped_chest_small")
-		mesecon.receptor_off(pos, trapped_chest_mesecons_rules)
+		mesecon.receptor_off(pos, mesecon.rules.pplate)
 	elseif node.name == "mcl_chests:trapped_chest_on_left" then
 		minetest.swap_node(pos, { name = "mcl_chests:trapped_chest_left", param2 = node.param2 })
 		find_or_create_entity(pos, "mcl_chests:trapped_chest_left", mcl_chests.tiles.chest_trapped_double, node.param2, true,
 			"default_chest", "mcl_chests_chest", "chest"):reinitialize("mcl_chests:trapped_chest_left")
-		mesecon.receptor_off(pos, trapped_chest_mesecons_rules)
+		mesecon.receptor_off(pos, mesecon.rules.pplate)
 
 		local pos_other = get_double_container_neighbor_pos(pos, node.param2, "left")
 		minetest.swap_node(pos_other, { name = "mcl_chests:trapped_chest_right", param2 = node.param2 })
-		mesecon.receptor_off(pos_other, trapped_chest_mesecons_rules)
+		mesecon.receptor_off(pos_other, mesecon.rules.pplate)
 	elseif node.name == "mcl_chests:trapped_chest_on_right" then
 		minetest.swap_node(pos, { name = "mcl_chests:trapped_chest_right", param2 = node.param2 })
-		mesecon.receptor_off(pos, trapped_chest_mesecons_rules)
+		mesecon.receptor_off(pos, mesecon.rules.pplate)
 
 		local pos_other = get_double_container_neighbor_pos(pos, node.param2, "right")
 		minetest.swap_node(pos_other, { name = "mcl_chests:trapped_chest_left", param2 = node.param2 })
-		find_or_create_entity(pos_other, "mcl_chests:trapped_chest_left", mcl_chests.tiles.chest_trapped_double, node.param2, true,
-			"default_chest", "mcl_chests_chest", "chest"):reinitialize("mcl_chests:trapped_chest_left")
-		mesecon.receptor_off(pos_other, trapped_chest_mesecons_rules)
+		find_or_create_entity(pos_other, "mcl_chests:trapped_chest_left", mcl_chests.tiles.chest_trapped_double,
+			node.param2, true, "default_chest", "mcl_chests_chest", "chest")
+			:reinitialize("mcl_chests:trapped_chest_left")
+		mesecon.receptor_off(pos_other, mesecon.rules.pplate)
 	end
 end
 mcl_chests.chest_update_after_close = chest_update_after_close
@@ -269,8 +268,8 @@ local function player_chest_close(player)
 	end
 	if animated_chests then
 		find_or_create_entity(open_chest.pos, open_chest.node_name, open_chest.textures, open_chest.param2,
-			open_chest.double,
-			open_chest.sound, open_chest.mesh, open_chest.shulker and "shulker" or "chest"):close(name)
+			open_chest.double, open_chest.sound, open_chest.mesh, open_chest.shulker and "shulker" or "chest")
+			:close(name)
 	end
 	chest_update_after_close(open_chest.pos)
 
@@ -278,96 +277,108 @@ local function player_chest_close(player)
 end
 mcl_chests.player_chest_close = player_chest_close
 
--- This is a helper function to register both chests and trapped chests. Trapped chests will make use of the additional parameters
-function mcl_chests.register_chest(basename, desc, longdesc, usagehelp, tt_help, tiles_table, hidden, mesecons,
-							  on_rightclick_addendum, on_rightclick_addendum_left,
-							  on_rightclick_addendum_right, drop, canonical_basename)
-	if not drop then
-		drop = "mcl_chests:" .. basename
+local function double_chest_add_item(top_inv, bottom_inv, listname, stack)
+	if not stack or stack:is_empty() then return end
+
+	local name = stack:get_name()
+
+	local function top_off(inv, stack)
+		for c, chest_stack in ipairs(inv:get_list(listname)) do
+			if stack:is_empty() then
+				break
+			end
+
+			if chest_stack:get_name() == name and chest_stack:get_free_space() > 0 then
+				stack = chest_stack:add_item(stack)
+				inv:set_stack(listname, c, chest_stack)
+			end
+		end
+
+		return stack
+	end
+
+	stack = top_off(top_inv, stack)
+	stack = top_off(bottom_inv, stack)
+
+	if not stack:is_empty() then
+		stack = top_inv:add_item(listname, stack)
+		if not stack:is_empty() then
+			bottom_inv:add_item(listname, stack)
+		end
+	end
+end
+
+local function on_chest_blast(pos)
+	local node = minetest.get_node(pos)
+	drop_items_chest(pos, node)
+	minetest.remove_node(pos)
+end
+
+local function limit_put_list(stack, list)
+	for _, other in ipairs(list) do
+		stack = other:add_item(stack)
+		if stack:is_empty() then
+			break
+		end
+	end
+	return stack
+end
+
+local function limit_put(stack, inv1, inv2)
+	local leftover = ItemStack(stack)
+	leftover = limit_put_list(leftover, inv1:get_list("main"))
+	leftover = limit_put_list(leftover, inv2:get_list("main"))
+	return stack:get_count() - leftover:get_count()
+end
+
+local function close_forms(canonical_basename, pos)
+	local players = minetest.get_connected_players()
+	for p = 1, #players do
+		if vector.distance(players[p]:get_pos(), pos) <= 30 then
+			minetest.close_formspec(players[p]:get_player_name(),
+				"mcl_chests:" .. canonical_basename .. "_" .. pos.x .. "_" .. pos.y .. "_" .. pos.z)
+		end
+	end
+end
+
+-- This is a helper function to register regular chests (both small and double variants).
+-- Some parameters here are only utilized by trapped chests.
+function mcl_chests.register_chest(basename, d)
+	-- If this passes without crash, we know for a fact that d = {...}
+	assert((d and type(d) == "table"), "Second argument to mcl_chests.register_chest must be a table")
+
+	if not d.drop then
+		d.drop = "mcl_chests:" .. basename
 	else
-		drop = "mcl_chests:" .. drop
+		d.drop = "mcl_chests:" .. d.drop
 	end
 	-- The basename of the "canonical" version of the node, if set (e.g.: trapped_chest_on → trapped_chest).
 	-- Used to get a shared formspec ID and to swap the node back to the canonical version in on_construct.
-	if not canonical_basename then
-		canonical_basename = basename
-	end
-
-	local function double_chest_add_item(top_inv, bottom_inv, listname, stack)
-		if not stack or stack:is_empty() then return end
-
-		local name = stack:get_name()
-
-		local function top_off(inv, stack)
-			for c, chest_stack in ipairs(inv:get_list(listname)) do
-				if stack:is_empty() then
-					break
-				end
-
-				if chest_stack:get_name() == name and chest_stack:get_free_space() > 0 then
-					stack = chest_stack:add_item(stack)
-					inv:set_stack(listname, c, chest_stack)
-				end
-			end
-
-			return stack
-		end
-
-		stack = top_off(top_inv, stack)
-		stack = top_off(bottom_inv, stack)
-
-		if not stack:is_empty() then
-			stack = top_inv:add_item(listname, stack)
-			if not stack:is_empty() then
-				bottom_inv:add_item(listname, stack)
-			end
-		end
+	if not d.canonical_basename then
+		d.canonical_basename = basename
 	end
 
 	local drop_items_chest = mcl_util.drop_items_from_meta_container("main")
 
-	local function on_chest_blast(pos)
-		local node = minetest.get_node(pos)
-		drop_items_chest(pos, node)
-		minetest.remove_node(pos)
-	end
-
-	local function limit_put_list(stack, list)
-		for _, other in ipairs(list) do
-			stack = other:add_item(stack)
-			if stack:is_empty() then
-				break
-			end
-		end
-		return stack
-	end
-
-	local function limit_put(stack, inv1, inv2)
-		local leftover = ItemStack(stack)
-		leftover = limit_put_list(leftover, inv1:get_list("main"))
-		leftover = limit_put_list(leftover, inv2:get_list("main"))
-		return stack:get_count() - leftover:get_count()
-	end
-
 	local small_name = "mcl_chests:" .. basename .. "_small"
-	local small_textures = tiles_table.small
+	local small_textures = d.tiles.small
 	local left_name = "mcl_chests:" .. basename .. "_left"
 	local right_name = "mcl_chests:" .. basename .. "_right"
-	local double_textures = tiles_table.double
+	local double_textures = d.tiles.double
 
 	minetest.register_node("mcl_chests:" .. basename, {
-		description = desc,
-		_tt_help = tt_help,
-		_doc_items_longdesc = longdesc,
-		_doc_items_usagehelp = usagehelp,
-		_doc_items_hidden = hidden,
+		description = d.desc,
+		_tt_help = d.tt_help,
+		_doc_items_longdesc = d.longdesc,
+		_doc_items_usagehelp = d.usagehelp,
+		_doc_items_hidden = d.hidden,
 		drawtype = "mesh",
 		mesh = "mcl_chests_chest.b3d",
 		tiles = small_textures,
 		use_texture_alpha = "opaque",
 		paramtype = "light",
 		paramtype2 = "facedir",
-		sounds = mcl_sounds.node_sound_wood_defaults(),
+		sounds = d.sounds,
 		groups = { deco_block = 1 },
 		on_construct = function(pos, node)
 			local node = minetest.get_node(pos)
@@ -379,22 +390,12 @@ function mcl_chests.register_chest(basename, desc, longdesc, usagehelp, tt_help,
 		end,
 	})
 
-	local function close_forms(canonical_basename, pos)
-		local players = minetest.get_connected_players()
-		for p = 1, #players do
-			if vector.distance(players[p]:get_pos(), pos) <= 30 then
-				minetest.close_formspec(players[p]:get_player_name(),
-					"mcl_chests:" .. canonical_basename .. "_" .. pos.x .. "_" .. pos.y .. "_" .. pos.z)
-			end
-		end
-	end
-
 	minetest.register_node(small_name, {
-		description = desc,
-		_tt_help = tt_help,
-		_doc_items_longdesc = longdesc,
-		_doc_items_usagehelp = usagehelp,
-		_doc_items_hidden = hidden,
+		description = d.desc,
+		_tt_help = d.tt_help,
+		_doc_items_longdesc = d.longdesc,
+		_doc_items_usagehelp = d.usagehelp,
+		_doc_items_hidden = d.hidden,
 		drawtype = "nodebox",
 		node_box = {
 			type = "fixed",
@@ -408,7 +409,7 @@ function mcl_chests.register_chest(basename, desc, longdesc, usagehelp, tt_help,
 		_chest_entity_animation_type = "chest",
 		paramtype = "light",
 		paramtype2 = "facedir",
-		drop = drop,
+		drop = d.drop,
 		groups = {
 			handy = 1,
 			axey = 1,
@@ -420,7 +421,7 @@ function mcl_chests.register_chest(basename, desc, longdesc, usagehelp, tt_help,
 			not_in_creative_inventory = 1
 		},
 		is_ground_content = false,
-		sounds = mcl_sounds.node_sound_wood_defaults(),
+		sounds = d.sounds,
 		on_construct = function(pos)
 			local param2 = minetest.get_node(pos).param2
 			local meta = minetest.get_meta(pos)
@@ -497,8 +498,8 @@ function mcl_chests.register_chest(basename, desc, longdesc, usagehelp, tt_help,
 			minetest.log("action", player:get_player_name() ..
 				" takes stuff from chest at " .. minetest.pos_to_string(pos))
 		end,
-		_mcl_blast_resistance = 2.5,
-		_mcl_hardness = 2.5,
+		_mcl_blast_resistance = d.hardness,
+		_mcl_hardness = d.hardness,
 
 		on_rightclick = function(pos, node, clicker)
 			local topnode = minetest.get_node({ x = pos.x, y = pos.y + 1, z = pos.z })
@@ -514,7 +515,7 @@ function mcl_chests.register_chest(basename, desc, longdesc, usagehelp, tt_help,
 			end
 
 			minetest.show_formspec(clicker:get_player_name(),
-				sf("mcl_chests:%s_%s_%s_%s", canonical_basename, pos.x, pos.y, pos.z),
+				sf("mcl_chests:%s_%s_%s_%s", d.canonical_basename, pos.x, pos.y, pos.z),
 				table.concat({
 					"formspec_version[4]",
 					"size[11.75,10.425]",
@@ -533,8 +534,8 @@ function mcl_chests.register_chest(basename, desc, longdesc, usagehelp, tt_help,
 				})
 			)
 
-			if on_rightclick_addendum then
-				on_rightclick_addendum(pos, node, clicker)
+			if d.on_rightclick then
+				d.on_rightclick(pos, node, clicker)
 			end
 
 			player_chest_open(clicker, pos, small_name, small_textures, node.param2, false, "default_chest",
@@ -542,9 +543,9 @@ function mcl_chests.register_chest(basename, desc, longdesc, usagehelp, tt_help,
 		end,
 
 		on_destruct = function(pos)
-			close_forms(canonical_basename, pos)
+			close_forms(d.canonical_basename, pos)
 		end,
-		mesecons = mesecons,
+		mesecons = d.mesecons,
 		on_rotate = simple_rotate,
 	})
 
@@ -572,15 +573,15 @@ function mcl_chests.register_chest(basename, desc, longdesc, usagehelp, tt_help,
 			chest_entity = 1,
 			double_chest = 1
 		},
-		drop = drop,
+		drop = d.drop,
 		is_ground_content = false,
-		sounds = mcl_sounds.node_sound_wood_defaults(),
+		sounds = d.sounds,
 		on_construct = function(pos)
 			local n = minetest.get_node(pos)
 			local param2 = n.param2
 			local p = get_double_container_neighbor_pos(pos, param2, "left")
-			if not p or minetest.get_node(p).name ~= "mcl_chests:" .. canonical_basename .. "_right" then
-				n.name = "mcl_chests:" .. canonical_basename .. "_small"
+			if not p or minetest.get_node(p).name ~= "mcl_chests:" .. d.canonical_basename .. "_right" then
+				n.name = "mcl_chests:" .. d.canonical_basename .. "_small"
 				minetest.swap_node(pos, n)
 			end
 			create_entity(pos, left_name, double_textures, param2, true, "default_chest", "mcl_chests_chest", "chest")
@@ -594,14 +595,14 @@ function mcl_chests.register_chest(basename, desc, longdesc, usagehelp, tt_help,
 				return
 			end
 
-			close_forms(canonical_basename, pos)
+			close_forms(d.canonical_basename, pos)
 
 			local param2 = n.param2
 			local p = get_double_container_neighbor_pos(pos, param2, "left")
 			if not p or minetest.get_node(p).name ~= "mcl_chests:" .. basename .. "_right" then
 				return
 			end
-			close_forms(canonical_basename, p)
+			close_forms(d.canonical_basename, p)
 
 			minetest.swap_node(p, { name = small_name, param2 = param2 })
 			create_entity(p, small_name, small_textures, param2, false, "default_chest", "mcl_chests_chest", "chest")
@@ -649,8 +650,8 @@ function mcl_chests.register_chest(basename, desc, longdesc, usagehelp, tt_help,
 			minetest.log("action", player:get_player_name() ..
 				" takes stuff from chest at " .. minetest.pos_to_string(pos))
 		end,
-		_mcl_blast_resistance = 2.5,
-		_mcl_hardness = 2.5,
+		_mcl_blast_resistance = d.hardness,
+		_mcl_hardness = d.hardness,
 
 		on_rightclick = function(pos, node, clicker)
 			local pos_other = get_double_container_neighbor_pos(pos, node.param2, "left")
@@ -675,7 +676,7 @@ function mcl_chests.register_chest(basename, desc, longdesc, usagehelp, tt_help,
 			end
 
 			minetest.show_formspec(clicker:get_player_name(),
-				sf("mcl_chests:%s_%s_%s_%s", canonical_basename, pos.x, pos.y, pos.z),
+				sf("mcl_chests:%s_%s_%s_%s", d.canonical_basename, pos.x, pos.y, pos.z),
 				table.concat({
 					"formspec_version[4]",
 					"size[11.75,14.15]",
@@ -704,14 +705,14 @@ function mcl_chests.register_chest(basename, desc, longdesc, usagehelp, tt_help,
 				})
 			)
 
-			if on_rightclick_addendum_left then
-				on_rightclick_addendum_left(pos, node, clicker)
+			if d.on_rightclick_left then
+				d.on_rightclick_left(pos, node, clicker)
 			end
 
 			player_chest_open(clicker, pos, left_name, double_textures, node.param2, true, "default_chest",
 				"mcl_chests_chest")
 		end,
-		mesecons = mesecons,
+		mesecons = d.mesecons,
 		on_rotate = no_rotate,
 		_mcl_hoppers_on_try_pull = function(pos, hop_pos, hop_inv, hop_list)
 			local meta = minetest.get_meta(pos)
@@ -766,9 +767,9 @@ function mcl_chests.register_chest(basename, desc, longdesc, usagehelp, tt_help,
 			flammable = -1,
 			double_chest = 2
 		},
-		drop = drop,
+		drop = d.drop,
 		is_ground_content = false,
-		sounds = mcl_sounds.node_sound_wood_defaults(),
+		sounds = d.sounds,
 		on_construct = function(pos)
 			local n = minetest.get_node(pos)
 			local param2 = n.param2
@@ -787,14 +788,14 @@ function mcl_chests.register_chest(basename, desc, longdesc, usagehelp, tt_help,
 				return
 			end
 
-			close_forms(canonical_basename, pos)
+			close_forms(d.canonical_basename, pos)
 
 			local param2 = n.param2
 			local p = get_double_container_neighbor_pos(pos, param2, "right")
 			if not p or minetest.get_node(p).name ~= left_name then
 				return
 			end
-			close_forms(canonical_basename, p)
+			close_forms(d.canonical_basename, p)
 
 			minetest.swap_node(p, { name = small_name, param2 = param2 })
 			create_entity(p, small_name, small_textures, param2, false, "default_chest", "mcl_chests_chest", "chest")
@@ -842,8 +843,8 @@ function mcl_chests.register_chest(basename, desc, longdesc, usagehelp, tt_help,
 			minetest.log("action", player:get_player_name() ..
 				" takes stuff from chest at " .. minetest.pos_to_string(pos))
 		end,
-		_mcl_blast_resistance = 2.5,
-		_mcl_hardness = 2.5,
+		_mcl_blast_resistance = d.hardness,
+		_mcl_hardness = d.hardness,
 
 		on_rightclick = function(pos, node, clicker)
 			local pos_other = get_double_container_neighbor_pos(pos, node.param2, "right")
@@ -868,7 +869,7 @@ function mcl_chests.register_chest(basename, desc, longdesc, usagehelp, tt_help,
 			end
 
 			minetest.show_formspec(clicker:get_player_name(),
-				sf("mcl_chests:%s_%s_%s_%s", canonical_basename, pos.x, pos.y, pos.z),
+				sf("mcl_chests:%s_%s_%s_%s", d.canonical_basename, pos.x, pos.y, pos.z),
 				table.concat({
 					"formspec_version[4]",
 					"size[11.75,14.15]",
@@ -897,14 +898,14 @@ function mcl_chests.register_chest(basename, desc, longdesc, usagehelp, tt_help,
 				})
 			)
 
-			if on_rightclick_addendum_right then
-				on_rightclick_addendum_right(pos, node, clicker)
+			if d.on_rightclick_right then
+				d.on_rightclick_right(pos, node, clicker)
 			end
 
 			player_chest_open(clicker, pos_other, left_name, double_textures, node.param2, true, "default_chest",
 				"mcl_chests_chest")
 		end,
-		mesecons = mesecons,
+		mesecons = d.mesecons,
 		on_rotate = no_rotate,
 		_mcl_hoppers_on_try_pull = function(pos, hop_pos, hop_inv, hop_list)
 			local node = minetest.get_node(pos)
