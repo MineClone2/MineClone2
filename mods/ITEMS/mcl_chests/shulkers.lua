@@ -83,17 +83,17 @@ for color, desc in pairs(boxtypes) do
 	local longdesc, usagehelp, create_entry, entry_name
 	if doc then
 		if is_canonical then
-			longdesc = S([[
-				A shulker box is a portable container which provides 27 inventory slots for any item
-				except shulker boxes. Shulker boxes keep their inventory when broken, so shulker boxes
-				as well as their contents can be taken as a single item. Shulker boxes come in many
-				different colors.
-			]])
-			usagehelp = S([[
-				To access the inventory of a shulker box, place and right-click it. To take a shulker
-				box and its contents with you, just break and collect it, the items will not fall out.
-				Place the shulker box again to be able to retrieve its contents.
-			]])
+			longdesc = S(
+				"A shulker box is a portable container which provides 27 inventory slots for any item " ..
+				"except shulker boxes. Shulker boxes keep their inventory when broken, so shulker boxes " ..
+				"as well as their contents can be taken as a single item. Shulker boxes come in many " ..
+				"different colors."
+			)
+			usagehelp = S(
+				"To access the inventory of a shulker box, place and right-click it. To take a shulker " ..
+				"box and its contents with you, just break and collect it, the items will not fall out. " ..
+				"Place the shulker box again to be able to retrieve its contents."
+			)
 			entry_name = S("Shulker Box")
 		else
 			create_entry = false

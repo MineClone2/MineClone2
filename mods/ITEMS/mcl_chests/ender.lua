@@ -2,12 +2,12 @@ local S = minetest.get_translator(minetest.get_current_modname())
 local F = minetest.formspec_escape
 local C = minetest.colorize
 
-local longdesc = S([[
-	Ender chests grant you access to a single personal interdimensional inventory with 27 slots. This
-	inventory is the same no matter from which ender chest you access it from. If you put one item into one
-	ender chest, you will find it in all other ender chests. Each player will only see their own items, but
-	not the items of other players.
-]])
+local longdesc = S(
+	"Ender chests grant you access to a single personal interdimensional inventory with 27 slots. This " ..
+	"inventory is the same no matter from which ender chest you access it from. If you put one item into one " ..
+	"ender chest, you will find it in all other ender chests. Each player will only see their own items, but " ..
+	"not the items of other players."
+)
 
 minetest.register_node("mcl_chests:ender_chest", {
 	description = S("Ender Chest"),

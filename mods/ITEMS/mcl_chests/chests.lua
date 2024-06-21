@@ -8,7 +8,10 @@ local chestusage = S("To access its inventory, rightclick it. When broken, the i
 
 mcl_chests.register_chest("chest",
 	S("Chest"),
-	S("Chests are containers which provide 27 inventory slots. Chests can be turned into large chests with double the capacity by placing two chests next to each other."),
+	S(
+		"Chests are containers which provide 27 inventory slots. Chests can be turned into large chests with " ..
+		"double the capacity by placing two chests next to each other."
+	),
 	chestusage,
 	S("27 inventory slots") .. "\n" .. S("Can be combined to a large chest"),
 	{
@@ -28,7 +31,11 @@ local traptiles = {
 
 mcl_chests.register_chest("trapped_chest",
 	S("Trapped Chest"),
-	S("A trapped chest is a container which provides 27 inventory slots. When it is opened, it sends a redstone signal to its adjacent blocks as long it stays open. Trapped chests can be turned into large trapped chests with double the capacity by placing two trapped chests next to each other."),
+	S(
+		"A trapped chest is a container which provides 27 inventory slots. When it is opened, it sends a redstone " ..
+		"signal to its adjacent blocks as long it stays open. Trapped chests can be turned into large trapped " ..
+		"chests with double the capacity by placing two trapped chests next to each other."
+	),
 	chestusage,
 	S("27 inventory slots") ..
 	"\n" .. S("Can be combined to a large chest") .. "\n" .. S("Emits a redstone signal when opened"),
@@ -42,8 +49,9 @@ mcl_chests.register_chest("trapped_chest",
 	},
 	function(pos, node, clicker)
 		minetest.swap_node(pos, { name = "mcl_chests:trapped_chest_on_small", param2 = node.param2 })
-		mcl_chests.find_or_create_entity(pos, "mcl_chests:trapped_chest_on_small", { "mcl_chests_trapped.png" }, node.param2, false,
-			"default_chest", "mcl_chests_chest", "chest"):reinitialize("mcl_chests:trapped_chest_on_small")
+		mcl_chests.find_or_create_entity(pos, "mcl_chests:trapped_chest_on_small", { "mcl_chests_trapped.png" },
+			node.param2, false, "default_chest", "mcl_chests_chest", "chest")
+			:reinitialize("mcl_chests:trapped_chest_on_small")
 		mesecon.receptor_on(pos, trapped_chest_mesecons_rules)
 	end,
 	function(pos, node, clicker)
@@ -51,8 +59,9 @@ mcl_chests.register_chest("trapped_chest",
 		meta:set_int("players", 1)
 
 		minetest.swap_node(pos, { name = "mcl_chests:trapped_chest_on_left", param2 = node.param2 })
-		mcl_chests.find_or_create_entity(pos, "mcl_chests:trapped_chest_on_left", mcl_chests.tiles.chest_trapped_double, node.param2, true,
-			"default_chest", "mcl_chests_chest", "chest"):reinitialize("mcl_chests:trapped_chest_on_left")
+		mcl_chests.find_or_create_entity(pos, "mcl_chests:trapped_chest_on_left",
+			mcl_chests.tiles.chest_trapped_double, node.param2, true, "default_chest", "mcl_chests_chest",
+			"chest"):reinitialize("mcl_chests:trapped_chest_on_left")
 		mesecon.receptor_on(pos, trapped_chest_mesecons_rules)
 
 		local pos_other = get_double_container_neighbor_pos(pos, node.param2, "left")
@@ -66,9 +75,9 @@ mcl_chests.register_chest("trapped_chest",
 		mesecon.receptor_on(pos, trapped_chest_mesecons_rules)
 
 		minetest.swap_node(pos_other, { name = "mcl_chests:trapped_chest_on_left", param2 = node.param2 })
-		mcl_chests.find_or_create_entity(pos_other, "mcl_chests:trapped_chest_on_left", mcl_chests.tiles.chest_trapped_double, node.param2,
-			true,
-			"default_chest", "mcl_chests_chest", "chest"):reinitialize("mcl_chests:trapped_chest_on_left")
+		mcl_chests.find_or_create_entity(pos_other, "mcl_chests:trapped_chest_on_left",
+			mcl_chests.tiles.chest_trapped_double, node.param2, true, "default_chest", "mcl_chests_chest",
+			"chest"):reinitialize("mcl_chests:trapped_chest_on_left")
 		mesecon.receptor_on(pos_other, trapped_chest_mesecons_rules)
 	end
 )
