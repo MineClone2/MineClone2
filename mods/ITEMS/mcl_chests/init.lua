@@ -78,9 +78,13 @@ minetest.register_lbm({
 minetest.register_lbm({
 	label = "Replace old chest nodes",
 	name = "mcl_chests:replace_old",
-	nodenames = { "mcl_chests:chest", "mcl_chests:trapped_chest", "mcl_chests:trapped_chest_on",
+	nodenames = {
+		"mcl_chests:chest",
+		"mcl_chests:trapped_chest",
+		"mcl_chests:trapped_chest_on",
 		"mcl_chests:ender_chest",
-		"group:old_shulker_box_node" },
+		"group:old_shulker_box_node"
+	},
 	run_at_every_load = true,
 	action = function(pos, node)
 		local node_name = node.name
@@ -102,8 +106,11 @@ minetest.register_lbm({
 minetest.register_lbm({
 	label = "Disable active trapped chests",
 	name = "mcl_chests:reset_trapped_chests",
-	nodenames = { "mcl_chests:trapped_chest_on_small", "mcl_chests:trapped_chest_on_left",
-		"mcl_chests:trapped_chest_on_right" },
+	nodenames = {
+		"mcl_chests:trapped_chest_on_small",
+		"mcl_chests:trapped_chest_on_left",
+		"mcl_chests:trapped_chest_on_right"
+	},
 	run_at_every_load = true,
 	action = function(pos, node)
 		minetest.log("action", "[mcl_chests] Disabled active trapped chest on load: " .. minetest.pos_to_string(pos))

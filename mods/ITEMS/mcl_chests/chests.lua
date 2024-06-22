@@ -42,6 +42,7 @@ mcl_chests.register_chest("trapped_chest", {
 	tt_help = S("27 inventory slots") ..
 		"\n" .. S("Can be combined to a large chest") .. "\n" .. S("Emits a redstone signal when opened"),
 	tiles = traptiles,
+	groups = { mesecon = 2 },
 	sounds = mcl_sounds.node_sound_wood_defaults(),
 	hardness = 2.5,
 	hidden = false,
