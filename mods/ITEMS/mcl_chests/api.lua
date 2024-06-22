@@ -548,12 +548,8 @@ function mcl_chests.register_chest(basename, d)
 	-- Construct groups
 	local groups_inv = table_merge({ deco_block = 1 }, d.groups)
 	local groups_small = table_merge(groups_inv, {
-		handy = 1,
-		axey = 1,
 		container = 2,
 		deco_block = 1,
-		material_wood = 1,
-		flammable = -1,
 		chest_entity = 1,
 		not_in_creative_inventory = 1
 	}, d.groups)
