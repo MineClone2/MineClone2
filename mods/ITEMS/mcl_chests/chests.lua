@@ -39,6 +39,10 @@ local traptiles = {
 
 mcl_chests.register_chest("trapped_chest", {
 	desc = S("Trapped Chest"),
+	title = {
+		small = S("Chest"),
+		double = S("Large Chest")
+	},
 	longdesc = S(
 		"A trapped chest is a container which provides 27 inventory slots. When it is opened, it sends a redstone " ..
 		"signal to its adjacent blocks as long it stays open. Trapped chests can be turned into large trapped " ..
@@ -101,6 +105,10 @@ mcl_chests.register_chest("trapped_chest", {
 
 mcl_chests.register_chest("trapped_chest_on", {
 	desc = nil,
+	title = {
+		small = S("Chest"),
+		double = S("Large Chest")
+	},
 	longdesc = nil,
 	usagehelp = nil,
 	tt_help = nil,

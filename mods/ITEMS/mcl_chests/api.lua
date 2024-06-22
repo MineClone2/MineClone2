@@ -495,6 +495,11 @@ function mcl_chests.register_chest(basename, d)
 	-- If this passes without crash, we know for a fact that d = {...}
 	assert((d and type(d) == "table"), "Second argument to mcl_chests.register_chest must be a table")
 
+	-- Fallback for when there is no `title` field
+	if not d.title then d.title = {} end
+	d.title.small = d.title.small or d.desc
+	d.title.double = d.title.double or ("Large " .. d.title.small)
+
 	if not d.drop then
 		d.drop = "mcl_chests:" .. basename
 	else
@@ -686,7 +691,7 @@ function mcl_chests.register_chest(basename, d)
 			end
 			local name = minetest.get_meta(pos):get_string("name")
 			if name == "" then
-				name = S("Chest")
+				name = d.title.small
 			end
 
 			minetest.show_formspec(clicker:get_player_name(),
@@ -777,7 +782,7 @@ function mcl_chests.register_chest(basename, d)
 			if name == "" then -- if empty after that ^
 				name = minetest.get_meta(pos_other):get_string("name")
 			end if name == "" then -- if STILL empty after that ^
-				name = S("Large Chest")
+				name = d.title.double
 			end
 
 			minetest.show_formspec(clicker:get_player_name(),
@@ -872,7 +877,7 @@ function mcl_chests.register_chest(basename, d)
 			if name == "" then -- if empty after that ^
 				name = minetest.get_meta(pos_other):get_string("name")
 			end if name == "" then -- if STILL empty after that ^
-				name = S("Large Chest")
+				name = d.title.double
 			end
 
 			minetest.show_formspec(clicker:get_player_name(),
