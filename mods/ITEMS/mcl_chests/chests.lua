@@ -27,7 +27,7 @@ mcl_chests.register_chest("chest", {
 		material_wood = 1,
 		flammable = -1,
 	},
-	sounds = mcl_sounds.node_sound_wood_defaults(),
+	sounds = { mcl_sounds.node_sound_wood_defaults() },
 	hardness = 2.5,
 	hidden = false,
 })
@@ -59,7 +59,7 @@ mcl_chests.register_chest("trapped_chest", {
 		flammable = -1,
 		mesecon = 2,
 	},
-	sounds = mcl_sounds.node_sound_wood_defaults(),
+	sounds = { mcl_sounds.node_sound_wood_defaults() },
 	hardness = 2.5,
 	hidden = false,
 	mesecons = {
@@ -120,7 +120,7 @@ mcl_chests.register_chest("trapped_chest_on", {
 		flammable = -1,
 		mesecon = 2,
 	},
-	sounds = mcl_sounds.node_sound_wood_defaults(),
+	sounds = { mcl_sounds.node_sound_wood_defaults() },
 	hardness = 2.5,
 	hidden = true,
 	mesecons = {

@@ -29,9 +29,13 @@ mcl_chests.register_chest("stone_chest", {
 		stone = 1,
 		material_stone = 1,
 	},
-	sounds = mcl_sounds.node_sound_stone_defaults(),
+	sounds = { mcl_sounds.node_sound_stone_defaults() },
 	hardness = 4.0,
 	hidden = false,
+	-- It bites!
+	on_rightclick = function(pos, node, clicker)
+		mcl_util.deal_damage(clicker, 2)
+	end,
 })
 
 minetest.register_craft({
