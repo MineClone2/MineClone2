@@ -2,7 +2,6 @@ local S = minetest.get_translator(minetest.get_current_modname())
 local F = minetest.formspec_escape
 local C = minetest.colorize
 local get_double_container_neighbor_pos = mcl_util.get_double_container_neighbor_pos
-local trapped_chest_mesecons_rules = mesecon.rules.pplate
 
 local chestusage = S("To access its inventory, rightclick it. When broken, the items will drop out.")
 
@@ -65,7 +64,7 @@ mcl_chests.register_chest("trapped_chest", {
 	mesecons = {
 		receptor = {
 			state = mesecon.state.off,
-			rules = trapped_chest_mesecons_rules,
+			rules = mesecon.rules.pplate,
 		},
 	},
 	on_rightclick = function(pos, node, clicker)
@@ -73,7 +72,7 @@ mcl_chests.register_chest("trapped_chest", {
 		mcl_chests.find_or_create_entity(pos, "mcl_chests:trapped_chest_on_small", { "mcl_chests_trapped.png" },
 			node.param2, false, "default_chest", "mcl_chests_chest", "chest")
 			:reinitialize("mcl_chests:trapped_chest_on_small")
-		mesecon.receptor_on(pos, trapped_chest_mesecons_rules)
+		mesecon.receptor_on(pos, mesecon.rules.pplate)
 	end,
 	on_rightclick_left = function(pos, node, clicker)
 		local meta = minetest.get_meta(pos)
@@ -83,23 +82,23 @@ mcl_chests.register_chest("trapped_chest", {
 		mcl_chests.find_or_create_entity(pos, "mcl_chests:trapped_chest_on_left",
 			mcl_chests.tiles.chest_trapped_double, node.param2, true, "default_chest", "mcl_chests_chest",
 			"chest"):reinitialize("mcl_chests:trapped_chest_on_left")
-		mesecon.receptor_on(pos, trapped_chest_mesecons_rules)
+		mesecon.receptor_on(pos, mesecon.rules.pplate)
 
 		local pos_other = get_double_container_neighbor_pos(pos, node.param2, "left")
 		minetest.swap_node(pos_other, { name = "mcl_chests:trapped_chest_on_right", param2 = node.param2 })
-		mesecon.receptor_on(pos_other, trapped_chest_mesecons_rules)
+		mesecon.receptor_on(pos_other, mesecon.rules.pplate)
 	end,
 	on_rightclick_right = function(pos, node, clicker)
 		local pos_other = get_double_container_neighbor_pos(pos, node.param2, "right")
 
 		minetest.swap_node(pos, { name = "mcl_chests:trapped_chest_on_right", param2 = node.param2 })
-		mesecon.receptor_on(pos, trapped_chest_mesecons_rules)
+		mesecon.receptor_on(pos, mesecon.rules.pplate)
 
 		minetest.swap_node(pos_other, { name = "mcl_chests:trapped_chest_on_left", param2 = node.param2 })
 		mcl_chests.find_or_create_entity(pos_other, "mcl_chests:trapped_chest_on_left",
 			mcl_chests.tiles.chest_trapped_double, node.param2, true, "default_chest", "mcl_chests_chest",
 			"chest"):reinitialize("mcl_chests:trapped_chest_on_left")
-		mesecon.receptor_on(pos_other, trapped_chest_mesecons_rules)
+		mesecon.receptor_on(pos_other, mesecon.rules.pplate)
 	end
 })
 
@@ -126,7 +125,7 @@ mcl_chests.register_chest("trapped_chest_on", {
 	mesecons = {
 		receptor = {
 			state = mesecon.state.on,
-			rules = trapped_chest_mesecons_rules,
+			rules = mesecon.rules.pplate,
 		},
 	},
 	on_rightclick = nil,

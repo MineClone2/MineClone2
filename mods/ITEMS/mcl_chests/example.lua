@@ -6,7 +6,10 @@ local trapped_chest_mesecons_rules = mesecon.rules.pplate
 
 mcl_chests.register_chest("stone_chest", {
 	desc = S("Stone Chest"),
-	large_desc = S("Large Stone Chest"),
+	title = {
+		small = S("Stone Chest"),
+		double = S("Large Stone Chest")
+	},
 	longdesc = S(
 		"Stone Chests are containers which provide 27 inventory slots. Stone Chests can be turned into" ..
 		"large stone chests with double the capacity by placing two stone chests next to each other."
