@@ -67,6 +67,7 @@ local spider = {
 	curiosity = 10,
 	head_yaw="z",
 	collisionbox = {-0.7, -0.01, -0.7, 0.7, 0.89, 0.7},
+	spawnbox = {-1.2, -0.01, -1.2, 1.2, 0.89, 1.2},
 	visual = "mesh",
 	mesh = "mobs_mc_spider.b3d",
 	textures = {
