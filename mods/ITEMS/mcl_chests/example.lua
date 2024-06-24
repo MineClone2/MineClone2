@@ -29,7 +29,10 @@ mcl_chests.register_chest("stone_chest", {
 		stone = 1,
 		material_stone = 1,
 	},
-	sounds = { mcl_sounds.node_sound_stone_defaults() },
+	sounds = {
+		mcl_sounds.node_sound_stone_defaults(),
+		"mcl_chests_enderchest"
+	},
 	hardness = 4.0,
 	hidden = false,
 	-- It bites!

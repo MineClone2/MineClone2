@@ -393,36 +393,56 @@ end
 -- `side` is either "left" or "right".
 local function hopper_pull_double(side) return function(pos, hop_pos, hop_inv, hop_list)
 	local node = minetest.get_node(pos)
+	local meta = minetest.get_meta(pos)
+	local inv = meta:get_inventory()
+
 	local pos_other = get_double_container_neighbor_pos(pos, node.param2, side)
 	local meta_other = minetest.get_meta(pos_other)
 	local inv_other = meta_other:get_inventory()
 
-	local stack_id = mcl_util.select_stack(inv_other, "main", hop_inv, hop_list)
-	if stack_id ~= nil then
-		return inv_other, "main", stack_id
+	local ret_inv1, ret_inv2
+	if side == "left" then
+		ret_inv1 = inv
+		ret_inv2 = inv_other
+	else
+		ret_inv1 = inv_other
+		ret_inv2 = inv
 	end
 
-	local meta = minetest.get_meta(pos)
-	local inv = meta:get_inventory()
-	stack_id = mcl_util.select_stack(inv, "main", hop_inv, hop_list)
-	return inv, "main", stack_id
+	local stack_id = mcl_util.select_stack(ret_inv1, "main", hop_inv, hop_list)
+	if stack_id ~= nil then
+		return ret_inv1, "main", stack_id
+	end
+
+	stack_id = mcl_util.select_stack(ret_inv2, "main", hop_inv, hop_list)
+	return ret_inv2, "main", stack_id
 end end
 
 local function hopper_push_double(side) return function(pos, hop_pos, hop_inv, hop_list)
+	local node = minetest.get_node(pos)
 	local meta = minetest.get_meta(pos)
 	local inv = meta:get_inventory()
 
-	local stack_id = mcl_util.select_stack(hop_inv, hop_list, inv, "main", nil, 1)
-	if stack_id ~= nil then
-		return inv, "main", stack_id
-	end
-
-	local node = minetest.get_node(pos)
 	local pos_other = get_double_container_neighbor_pos(pos, node.param2, side)
 	local meta_other = minetest.get_meta(pos_other)
 	local inv_other = meta_other:get_inventory()
-	stack_id = mcl_util.select_stack(hop_inv, hop_list, inv_other, "main", nil, 1)
-	return inv_other, "main", stack_id
+
+	local ret_inv1, ret_inv2
+	if side == "left" then
+		ret_inv1 = inv
+		ret_inv2 = inv_other
+	else
+		ret_inv1 = inv_other
+		ret_inv2 = inv
+	end
+
+	local stack_id = mcl_util.select_stack(hop_inv, hop_list, ret_inv1, "main", nil, 1)
+	if stack_id ~= nil then
+		return ret_inv1, "main", stack_id
+	end
+
+	stack_id = mcl_util.select_stack(hop_inv, hop_list, ret_inv2, "main", nil, 1)
+	return ret_inv2, "main", stack_id
 end end
 
 local function construct_double_chest(side, names) return function(pos)
@@ -436,7 +456,7 @@ local function construct_double_chest(side, names) return function(pos)
 	end
 end end
 
-local function destruct_double_chest(side, names, canonical_basename, small_textures) return function(pos)
+local function destruct_double_chest(side, names, canonical_basename, small_textures, sound_prefix) return function(pos)
 	local n = minetest.get_node(pos)
 	if n.name == names.small.a then
 		return
@@ -452,7 +472,7 @@ local function destruct_double_chest(side, names, canonical_basename, small_text
 	close_forms(canonical_basename, p)
 
 	minetest.swap_node(p, { name = names.small.a, param2 = param2 })
-	create_entity(p, names.small.a, small_textures, param2, false, "default_chest", "mcl_chests_chest", "chest")
+	create_entity(p, names.small.a, small_textures, param2, false, sound_prefix, "mcl_chests_chest", "chest")
 end end
 
 -- Small chests use `protection_check_take` for both put and take actions.
@@ -774,7 +794,7 @@ function mcl_chests.register_chest(basename, d)
 		after_place_node = function(pos, placer, itemstack, pointed_thing)
 			minetest.get_meta(pos):set_string("name", itemstack:get_meta():get_string("name"))
 		end,
-		on_destruct = destruct_double_chest("left", names, d.canonical_basename, small_textures),
+		on_destruct = destruct_double_chest("left", names, d.canonical_basename, small_textures, d.sounds[2]),
 		after_dig_node = drop_items_chest,
 		on_blast = on_chest_blast,
 		allow_metadata_inventory_move = protection_check_move,
@@ -869,7 +889,7 @@ function mcl_chests.register_chest(basename, d)
 		after_place_node = function(pos, placer, itemstack, pointed_thing)
 			minetest.get_meta(pos):set_string("name", itemstack:get_meta():get_string("name"))
 		end,
-		on_destruct = destruct_double_chest("right", names, d.canonical_basename, small_textures),
+		on_destruct = destruct_double_chest("right", names, d.canonical_basename, small_textures, d.sounds[2]),
 		after_dig_node = drop_items_chest,
 		on_blast = on_chest_blast,
 		allow_metadata_inventory_move = protection_check_move,
