@@ -1,5 +1,16 @@
 # `mcl_chests` API
 
+When reading through this documentation, please keep in mind that the chest
+animations are achieved by giving each chest node an entity, as Minetest (as of
+5.8.1) doesn't support giving nodes animated meshes, only static ones.
+
+Because of that, a lot of parameters passed through the exposed functions are
+be related to nodes and entities.
+
+Please refer to [Minetest documentation](http://api.minetest.net/) and the code
+comments in `api.lua`.
+
+
 ## `mcl_chests.register_chest(basename, definition)`
 
 This function allows for simple chest registration, used by both regular and
