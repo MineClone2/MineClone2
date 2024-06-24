@@ -1,8 +1,4 @@
 local S = minetest.get_translator(minetest.get_current_modname())
-local F = minetest.formspec_escape
-local C = minetest.colorize
-local get_double_container_neighbor_pos = mcl_util.get_double_container_neighbor_pos
-local trapped_chest_mesecons_rules = mesecon.rules.pplate
 
 mcl_chests.register_chest("stone_chest", {
 	desc = S("Stone Chest"),
