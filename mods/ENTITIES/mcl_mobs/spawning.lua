@@ -778,15 +778,20 @@ local function has_room(self,pos)
 	local processed = {}
 	for x = p1.x,p2.x do
 		for z = p1.z,p2.z do
-			local node = minetest.get_node(vector.new(x,p2.y,z)) or { name = "ignore" }
-			if not processed[node.name] then
-				local nodedef = minetest.registered_nodes
+			local test_pos = vector.new(x,p2.y,z)
+			local node = minetest.get_node(test_pos) or { name = "ignore" }
+			local cache_name = string.format("%s-%d", node.name, node.param2)
+			if not processed[cache_name] then
+				-- Calculate node bounding box and select the lowest y value
+				local boxes = minetest.get_node_boxes("collision_box", test_pos, node)
+				for i = 1,#boxes do
+					local box = boxes[i]
+					local y_test = box[2] + 0.5
+					if y_test < top_layer_height then top_layer_height = y_test end
 
-				-- TODO: calculate node bounding box and select the lowest y value
-				local lowest_y = 0
-				top_layer_height = math.min(lowest_y, top_layer_height)
-
-				processed[node.name] = true
+					local y_test = box[5] + 0.5
+					if y_test < top_layer_height then top_layer_height = y_test end
+				end
 			end
 		end
 	end
