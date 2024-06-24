@@ -18,7 +18,7 @@ trapped chests.
 
 * `basename` is a string that will be concatenated to form full nodenames for
   chests, for example `"mcl_chests:basename_small"`.
-* `definition` is a key-value table, with following fields:
+* `definition` is a key-value table, with the following fields:
 
 ```lua
 {
@@ -151,6 +151,18 @@ Returned value is either a luaentity, or `nil` if failed (in which case a
 warning message gets written into the console).
 
 
+## `mcl_chests.select_and_spawn_entity(pos, node)`
+
+This function is a simple wrapper for `mcl_chests.find_or_create_entity`,
+getting most of the fields from node definition.
+
+* `pos` is the position vector.
+* `node` is a NodeRef.
+
+Returned value is either a luaentity, or `nil` if failed (in which case a
+warning message gets written into the console).
+
+
 ## `mcl_chests.no_rotate`
 
 This function is equivalent to `screwdriver.disallow` and is used when a chest
@@ -175,6 +187,7 @@ otherwise (where position is a vector value).
 
 This function is called in `allow_metadata_inventory_move` field of Node
 definition.
+
 
 ## `mcl_chests.protection_check_put_take(pos, listname, index, stack, player)`
 

@@ -155,3 +155,20 @@ minetest.register_craft({
 	recipe = "mcl_chests:trapped_chest",
 	burntime = 15,
 })
+
+-- Disable active/open trapped chests when loaded because nobody could have them open at loading time.
+-- Fixes redstone weirdness.
+minetest.register_lbm({
+	label = "Disable active trapped chests",
+	name = "mcl_chests:reset_trapped_chests",
+	nodenames = {
+		"mcl_chests:trapped_chest_on_small",
+		"mcl_chests:trapped_chest_on_left",
+		"mcl_chests:trapped_chest_on_right"
+	},
+	run_at_every_load = true,
+	action = function(pos, node)
+		minetest.log("action", "[mcl_chests] Disabled active trapped chest on load: " .. minetest.pos_to_string(pos))
+		mcl_chests.chest_update_after_close(pos)
+	end,
+})

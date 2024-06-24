@@ -126,3 +126,13 @@ minetest.register_craft({
 		{ "mcl_core:obsidian", "mcl_core:obsidian", "mcl_core:obsidian" },
 	},
 })
+
+minetest.register_lbm({
+	label = "Upgrade old ender chest formspec",
+	name = "mcl_chests:replace_old_ender_form",
+	nodenames = { "mcl_chests:ender_chest_small" },
+	run_at_every_load = false,
+	action = function(pos, node)
+		minetest.get_meta(pos):set_string("formspec", "")
+	end,
+})

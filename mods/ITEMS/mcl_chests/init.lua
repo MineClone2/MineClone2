@@ -58,22 +58,12 @@ minetest.register_on_leaveplayer(function(player)
 	mcl_chests.player_chest_close(player)
 end)
 
-
-
-local function select_and_spawn_entity(pos, node)
-	local node_name = node.name
-	local node_def = minetest.registered_nodes[node_name]
-	local double_chest = minetest.get_item_group(node_name, "double_chest") > 0
-	mcl_chests.find_or_create_entity(pos, node_name, node_def._chest_entity_textures, node.param2, double_chest,
-		node_def._chest_entity_sound, node_def._chest_entity_mesh, node_def._chest_entity_animation_type)
-end
-
 minetest.register_lbm({
 	label = "Spawn Chest entities",
 	name = "mcl_chests:spawn_chest_entities",
 	nodenames = { "group:chest_entity" },
 	run_at_every_load = true,
-	action = select_and_spawn_entity,
+	action = mcl_chests.select_and_spawn_entity,
 })
 
 minetest.register_lbm({
@@ -100,31 +90,4 @@ minetest.register_lbm({
 			meta:set_string("formspec", formspec_ender_chest)
 		end
 	end
-})
-
--- Disable active/open trapped chests when loaded because nobody could have them open at loading time.
--- Fixes redstone weirdness.
-minetest.register_lbm({
-	label = "Disable active trapped chests",
-	name = "mcl_chests:reset_trapped_chests",
-	nodenames = {
-		"mcl_chests:trapped_chest_on_small",
-		"mcl_chests:trapped_chest_on_left",
-		"mcl_chests:trapped_chest_on_right"
-	},
-	run_at_every_load = true,
-	action = function(pos, node)
-		minetest.log("action", "[mcl_chests] Disabled active trapped chest on load: " .. minetest.pos_to_string(pos))
-		mcl_chests.chest_update_after_close(pos)
-	end,
-})
-
-minetest.register_lbm({
-	label = "Upgrade old ender chest formspec",
-	name = "mcl_chests:replace_old_ender_form",
-	nodenames = { "mcl_chests:ender_chest_small" },
-	run_at_every_load = false,
-	action = function(pos, node)
-		minetest.get_meta(pos):set_string("formspec", "")
-	end,
 })
