@@ -83,7 +83,7 @@ The VoxeLibre repository is hosted at Mesehub. To contribute or report issues, h
 * Discord: <https://discord.gg/xE4z8EEpDC>
 * YouTube: <https://www.youtube.com/channel/UClI_YcsXMF3KNeJtoBfnk9A>
 * ContentDB: <https://content.minetest.net/packages/wuzzy/mineclone2/>
-* OpenCollective: <https://opencollective.com/mineclone2>
+* OpenCollective: <https://opencollective.com/voxelibre>
 * Mastodon: <https://fosstodon.org/@VoxeLibre>
 * Lemmy: <https://lemm.ee/c/voxelibre>
 * Matrix space: <https://app.element.io/#/room/#voxelibre:matrix.org>
