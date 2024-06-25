@@ -24,7 +24,7 @@ local function table_merge(tbl, ...)
 end
 
 -- Chest Entity
--- ============
+-- ------------
 -- This is necessary to show the chest as an animated mesh, as Minetest doesn't support assigning animated meshes to
 -- nodes directly. We're bypassing this limitation by giving each chest its own entity, and making the chest node
 -- itself fully transparent.
@@ -208,7 +208,8 @@ if screwdriver then
 end
 mcl_chests.no_rotate, mcl_chests.simple_rotate = no_rotate, simple_rotate
 
---[[ List of open chests.
+--[[ List of open chests
+     -------------------
 Key: Player name
 Value:
 	If player is using a chest: { pos = <chest node position> }
@@ -417,7 +418,7 @@ local function get_chest_inventories(pos, side)
 end
 
 -- Functions used in double chest registration code
----------------------------------------------------
+-- ------------------------------------------------
 -- The `return function` wrapping is necessary to avoid stacking up parameters.
 -- `side` is either "left" or "right".
 local function hopper_pull_double(side) return function(pos, hop_pos, hop_inv, hop_list)
@@ -549,7 +550,7 @@ function mcl_chests.register_chest(basename, d)
 	end
 
 	-- Names table
-	-- ===========
+	-- -----------
 	-- Accessed through names["kind"].x (names.kind.x), where x can be:
 	--  a = "actual"
 	--  c = canonical
