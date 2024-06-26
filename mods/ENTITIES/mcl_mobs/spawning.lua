@@ -767,6 +767,9 @@ local function has_room(self,pos)
 	local n = #minetest.find_nodes_in_area(p1,p2,nodes) or 0
 	if n == ( dx * dz * dz ) then return true end
 
+	-- If we don't have an implementation of get_node_boxes, we can't check for sub-node space
+	if not minetest.get_node_boxes then return false end
+
 	-- Make sure the entire volume except for the top level is free before checking the top layer
 	if dy > 1 then
 		n = #minetest.find_nodes_in_area(p1, vector.offset(p2, 0, -1, 0), nodes)
