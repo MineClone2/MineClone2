@@ -1,6 +1,4 @@
-local S = minetest.get_translator(minetest.get_current_modname())                                                                      
-local F = minetest.formspec_escape
-local C = minetest.colorize
+local S = minetest.get_translator(minetest.get_current_modname())
 local get_double_container_neighbor_pos = mcl_util.get_double_container_neighbor_pos
 
 local chestusage = S("To access its inventory, rightclick it. When broken, the items will drop out.")

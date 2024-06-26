@@ -1,6 +1,4 @@
 local string = string
-local table = table
-local math = math
 
 local sm = string.match
 

@@ -1,4 +1,4 @@
-local S = minetest.get_translator(minetest.get_current_modname())                                                                      
+local S = minetest.get_translator(minetest.get_current_modname())
 local F = minetest.formspec_escape
 local C = minetest.colorize
 
@@ -6,7 +6,6 @@ local get_double_container_neighbor_pos = mcl_util.get_double_container_neighbor
 
 local string = string
 local table = table
-local math = math
 
 local sf = string.format
 
@@ -162,13 +161,13 @@ local function create_entity(pos, node_name, textures, param2, double, sound_pre
 	dir, entity_pos = get_entity_info(pos, param2, double, dir, entity_pos)
 	local initialization_data = minetest.serialize({pos, node_name, textures, dir, double, sound_prefix,
 		mesh_prefix, animation_type, "###mcl_chests:chest###"})
-	local obj = minetest.add_entity(entity_pos, "mcl_chests:chest", initialization_data) 
+	local obj = minetest.add_entity(entity_pos, "mcl_chests:chest", initialization_data)
 	if obj and obj:get_pos() then
 		return obj:get_luaentity()
 	else
 		minetest.log("warning", "[mcl_chests] Failed to create entity at " ..
 			(entity_pos and minetest.pos_to_string(entity_pos, 1) or "nil"))
-	end 
+	end
 end
 mcl_chests.create_entity = create_entity
 
@@ -381,7 +380,7 @@ local function limit_put_list(stack, list)
 end
 
 local function limit_put(stack, top_inv, bottom_inv)
-	local leftover = ItemStack(staick)
+	local leftover = ItemStack(stack)
 	leftover = limit_put_list(leftover, top_inv:get_list("main"))
 	leftover = limit_put_list(leftover, bottom_inv:get_list("main"))
 	return stack:get_count() - leftover:get_count()
@@ -496,9 +495,17 @@ local function log_inventory_put_double(side) return function(pos, listname, ind
 		" moves stuff to chest at " .. minetest.pos_to_string(pos))
 	-- BEGIN OF LISTRING WORKAROUND
 	if listname == "input" then
-		local top_inv, bottom_inv = get_chest_inventories(pos, side)
-		top_inv:set_stack("input", 1, nil)
-		double_chest_add_item(top_inv, bottom_inv, "main", stack)
+		local inv = minetest.get_inventory({ type = "node", pos = pos })
+		local other_pos = get_double_container_neighbor_pos(pos, minetest.get_node(pos).param2, side)
+		local other_inv = minetest.get_inventory({ type = "node", pos = other_pos })
+
+		inv:set_stack("input", 1, nil)
+
+		if side == "left" then
+			double_chest_add_item(inv, other_inv, "main", stack)
+		else
+			double_chest_add_item(other_inv, inv, "main", stack)
+		end
 	end
 	-- END OF LISTRING WORKAROUND
 end end

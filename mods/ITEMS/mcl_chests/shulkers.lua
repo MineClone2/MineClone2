@@ -1,4 +1,4 @@
-local S = minetest.get_translator(minetest.get_current_modname())                                                                      
+local S = minetest.get_translator(minetest.get_current_modname())
 local F = minetest.formspec_escape
 local C = minetest.colorize
 
