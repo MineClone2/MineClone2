@@ -207,12 +207,12 @@ if screwdriver then
 end
 mcl_chests.no_rotate, mcl_chests.simple_rotate = no_rotate, simple_rotate
 
---[[ List of open chests
-     -------------------
-Key: Player name
-Value:
-	If player is using a chest: { pos = <chest node position> }
-	Otherwise: nil ]]
+-- List of open chests
+-- -------------------
+-- Key: Player name
+-- Value:
+-- 	If player is using a chest: { pos = <chest node position> }
+--	Otherwise: nil
 local open_chests = {}
 mcl_chests.open_chests = open_chests
 
@@ -397,13 +397,11 @@ local function close_forms(canonical_basename, pos)
 end
 
 local function get_chest_inventories(pos, side)
-	local node = minetest.get_node(pos)
-	local meta = minetest.get_meta(pos)
-	local inv = meta:get_inventory()
+	local inv = minetest.get_inventory({ type = "node", pos = pos })
 
+	local node = minetest.get_node(pos)
 	local pos_other = get_double_container_neighbor_pos(pos, node.param2, side)
-	local meta_other = minetest.get_meta(pos_other)
-	local inv_other = meta_other:get_inventory()
+	local inv_other = minetest.get_inventory({ type = "node", pos = pos_other })
 
 	local top_inv, bottom_inv
 	if side == "left" then
@@ -495,17 +493,12 @@ local function log_inventory_put_double(side) return function(pos, listname, ind
 		" moves stuff to chest at " .. minetest.pos_to_string(pos))
 	-- BEGIN OF LISTRING WORKAROUND
 	if listname == "input" then
-		local inv = minetest.get_inventory({ type = "node", pos = pos })
-		local other_pos = get_double_container_neighbor_pos(pos, minetest.get_node(pos).param2, side)
-		local other_inv = minetest.get_inventory({ type = "node", pos = other_pos })
+		local top_inv, bottom_inv = get_chest_inventories(pos, side)
 
-		inv:set_stack("input", 1, nil)
+		top_inv:set_stack("input", 1, nil)
+		bottom_inv:set_stack("input", 1, nil)
 
-		if side == "left" then
-			double_chest_add_item(inv, other_inv, "main", stack)
-		else
-			double_chest_add_item(other_inv, inv, "main", stack)
-		end
+		double_chest_add_item(top_inv, bottom_inv, "main", stack)
 	end
 	-- END OF LISTRING WORKAROUND
 end end
