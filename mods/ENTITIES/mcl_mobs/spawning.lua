@@ -756,23 +756,31 @@ local function has_room(self,pos)
 
 	local cb_height = cb[5] - cb[2]
 	local p2 = vector.offset(p1,cb[4] - cb[1], cb_height, cb[6] - cb[3])
-	p2.x = math.floor(p2.x)
-	p2.y = math.floor(p2.y)
-	p2.z = math.floor(p2.z)
+	p2.x = math.ceil(p2.x) - 1
+	p2.y = math.ceil(p2.y) - 1
+	p2.z = math.ceil(p2.z) - 1
 
 	-- Check if the entire spawn volume is free
 	local dx = p2.x - p1.x + 1
 	local dy = p2.y - p1.y + 1
 	local dz = p2.z - p1.z + 1
-	local n = #minetest.find_nodes_in_area(p1,p2,nodes) or 0
-	if n == ( dx * dz * dz ) then return true end
+	local found_nodes = minetest.find_nodes_in_area(p1,p2,nodes) or 0
+	local n = #found_nodes
+	if n == ( dx * dy * dz ) then return true end
 
 	-- If we don't have an implementation of get_node_boxes, we can't check for sub-node space
 	if not minetest.get_node_boxes then return false end
 
 	-- Make sure the entire volume except for the top level is free before checking the top layer
 	if dy > 1 then
-		n = #minetest.find_nodes_in_area(p1, vector.offset(p2, 0, -1, 0), nodes)
+		-- Remove nodes in the top layer from the count
+		for i = 1,#found_nodes do
+			if found_nodes[i].y == p2.y then
+				n = n - 1
+			end
+		end
+
+		-- If the entire volume except the top layer isn't air (or nodes) then we can't spawn this mob here
 		if n < (dx * dz * ( dy - 1)) then return false end
 	end
 
