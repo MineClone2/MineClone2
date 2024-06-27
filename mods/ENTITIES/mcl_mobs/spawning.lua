@@ -771,6 +771,10 @@ local function has_room(self,pos)
 	-- If we don't have an implementation of get_node_boxes, we can't check for sub-node space
 	if not minetest.get_node_boxes then return false end
 
+	-- Check if it's possible for a sub-node space check to succeed
+	local needed_in_bottom_section = (dx * dz * ( dy - 1))
+	if n < needed_in_bottom_section then return false end
+
 	-- Make sure the entire volume except for the top level is free before checking the top layer
 	if dy > 1 then
 		-- Remove nodes in the top layer from the count
@@ -781,7 +785,7 @@ local function has_room(self,pos)
 		end
 
 		-- If the entire volume except the top layer isn't air (or nodes) then we can't spawn this mob here
-		if n < (dx * dz * ( dy - 1)) then return false end
+		if n < needed_in_bottom_section then return false end
 	end
 
 	-- Check the top layer to see if we have enough space to spawn in
