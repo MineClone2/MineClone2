@@ -97,7 +97,7 @@ minetest.register_node("mcl_chests:ender_chest_small", {
 	_mcl_blast_resistance = 3000,
 	_mcl_hardness = 22.5,
 	_mcl_silk_touch_drop = { "mcl_chests:ender_chest" },
-	on_rotate = simple_rotate,
+	on_rotate = mcl_chests.simple_rotate,
 })
 
 minetest.register_on_joinplayer(function(player)
