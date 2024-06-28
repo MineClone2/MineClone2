@@ -31,7 +31,7 @@ trapped chests.
         double = S("Large Stone Chest") -- defaults to `"Large " .. desc`
     }
     -- These will be shown when opening the chest (in formspecs).
-    
+
     longdesc = S(
         "Stone Chests are containers which provide 27 inventory slots. Stone Chests can be turned into" ..
         "large stone chests with double the capacity by placing two stone chests next to each other."
@@ -113,7 +113,7 @@ For usage examples, see `chests.lua` and `example.lua`.
 
 ## `mcl_chests.create_entity(pos, node_name, textures, param2, double, sound_prefix, mesh_prefix, animation_type, dir, entity_pos)`
 
-This function creates a chest entity based on parameters:
+This function creates a chest entity based on the parameters:
 
 * `pos` is the position vector.
 * `node_name` is a string used in initialization data for the entity.
@@ -131,7 +131,7 @@ Returned value is either a luaentity, or `nil` if failed (in which case a
 warning message gets written into the console).
 
 
-## `find_or_create_entity(pos, node_name, textures, param2, double, sound_prefix, mesh_prefix, animation_type, dir, entity_pos)`
+## `mcl_chests.find_or_create_entity(pos, node_name, textures, param2, double, sound_prefix, mesh_prefix, animation_type, dir, entity_pos)`
 
 This function finds an existing entity, or creates one if failed. Parameters:
 
@@ -197,7 +197,7 @@ This function is called in `allow_metadata_inventory_put` and
 
 ## `mcl_chests.player_chest_open(player, pos, node_name, textures, param2, double, sound, mesh, shulker)`
 
-This function opens a chest based on parameters:
+This function opens a chest based on the parameters:
 
 * `player` is an ObjectRef.
 * `pos` is the position vector.
