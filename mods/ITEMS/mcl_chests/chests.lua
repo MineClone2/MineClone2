@@ -101,14 +101,10 @@ mcl_chests.register_chest("trapped_chest", {
 })
 
 mcl_chests.register_chest("trapped_chest_on", {
-	desc = nil,
 	title = {
 		small = S("Chest"),
 		double = S("Large Chest")
 	},
-	longdesc = nil,
-	usagehelp = nil,
-	tt_help = nil,
 	tiles = traptiles,
 	groups = {
 		handy = 1,
@@ -126,9 +122,6 @@ mcl_chests.register_chest("trapped_chest_on", {
 			rules = mesecon.rules.pplate,
 		},
 	},
-	on_rightclick = nil,
-	on_rightclick_left = nil,
-	on_rightclick_right = nil,
 	drop = "trapped_chest",
 	canonical_basename = "trapped_chest"
 })
