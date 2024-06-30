@@ -618,7 +618,12 @@ local function initial_spawn_check(state, node, spawn_def)
 	local function log_fail(reason)
 		local count = (counts[reason] or 0) + 1
 		counts[reason] = count
-		--minetest.log("Spawn check for "..tostring(spawn_def and spawn_def.name).." failed - "..reason.." ("..count..")")
+		if logging then
+			minetest.log("Spawn check for "..tostring(spawn_def and spawn_def.name).." failed - "..reason.." ("..count..") "..dump({
+				state = state,
+				node = node,
+			}))
+		end
 		return false
 	end
 
@@ -701,6 +706,9 @@ local function build_state_for_position(pos, parent_state)
 	local node = get_node(pos)
 	local node_name = node.name
 
+	-- Make sure we can spawn here
+	if not node or node_name == "ignore" or node_name == "mcl_core:bedrock" then return end
+
 	-- Check if it's ground
 	local is_water = get_item_group(node_name, "water") ~= 0
 	local is_ground = false
@@ -709,13 +717,11 @@ local function build_state_for_position(pos, parent_state)
 		if not is_ground then
 			pos.y = pos.y - 1
 			node = get_node(pos)
+			node_name = node.name
 			is_ground = get_item_group(node_name,"solid") ~= 0
 		end
 		pos.y = pos.y + 1
 	end
-
-	-- Make sure we can spawn here
-	if not node or node_name == "ignore" or node_name == "mcl_core:bedrock" then return end
 
 	-- Build spawn state data
 	local state = {
@@ -728,8 +734,8 @@ local function build_state_for_position(pos, parent_state)
 	state.dimension = dimension
 
 	state.is_ground = is_ground and get_item_group(node_name, "leaves") == 0
-	state.grass = get_item_group(node_name, "grass_block") ~= 0
-	state.water = is_water
+	state.is_grass = get_item_group(node_name, "grass_block") ~= 0
+	state.is_water = is_water
 
 	-- Check light level
 	local gotten_light = get_node_light(pos)
@@ -940,13 +946,13 @@ if mobs_spawn then
 		end
 
 		local mob_chance_offset = math_random(1, 1e6) / 1e6 * cumulative_chance
-		minetest.log("action", "mob_chance_offset = "..tostring(mob_chance_offset).."/"..tostring(cumulative_chance))
+		--minetest.log("action", "mob_chance_offset = "..tostring(mob_chance_offset).."/"..tostring(cumulative_chance))
 
 		for i = 1,#spawn_table do
 			local mob_def = spawn_table[i]
 			local mob_chance = mob_def.chance
 			if mob_chance_offset <= mob_chance then
-				minetest.log(mob_def.name.." "..mob_chance)
+				--minetest.log(mob_def.name.." "..mob_chance)
 				return mob_def
 			end
 
